@@ -1,4 +1,7 @@
 <script setup>
+const artworks = ref([]);
+const animateFromIndex = ref(0);
+
 const { data: response } = await useFetch("/api/v1/items", {
   query: {
     size: 10,
@@ -10,7 +13,19 @@ const { data: response } = await useFetch("/api/v1/items", {
   }),
 });
 
-const artworks = response.value.data;
+artworks.value = response.value.data;
+
+const interval = ref();
+
+onMounted(() => {
+  interval.value = setInterval(() => {
+    animateFromIndex.value += response.value.data.length;
+    artworks.value = artworks.value.concat(response.value.data);
+  }, 2000);
+});
+onUnmounted(() => {
+  interval.value.clearInterval();
+});
 </script>
 
 <template>
@@ -25,12 +40,14 @@ const artworks = response.value.data;
     >
       <template #default="{ item: a, index }">
         <Transition
-          appear
+          :appear="index >= animateFromIndex"
           enter-from-class="opacity-0 scale-50"
           enter-active-class="transition duration-500"
           enter-to-class="opacity-100 scale-100"
         >
-          <div>
+          <div
+            :style="`transition-delay: ${(index - animateFromIndex) * 100}ms`"
+          >
             <NuxtLink :to="`/diela/${a.id}`">
               <img :src="a.content.thumbnail" />
             </NuxtLink>
