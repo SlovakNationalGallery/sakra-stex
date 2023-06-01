@@ -10,7 +10,6 @@
   },
   "devDependencies": {
     "@types/node": "^18",
-    "@yeger/vue-masonry-wall": "^3.5.0",
     "autoprefixer": "^10.4.14",
     "nuxt": "^3.5.1",
     "postcss": "^8.4.23",
