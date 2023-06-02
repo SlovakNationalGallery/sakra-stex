@@ -7,12 +7,4 @@ export default defineNuxtConfig({
       autoprefixer: {},
     },
   },
-  nitro: {
-    routeRules: {
-      "/api/**": {
-        proxy: "https://www.webumenia.sk/api/**",
-        swr: true,
-      },
-    },
-  },
 });
