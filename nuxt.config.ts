@@ -7,4 +7,9 @@ export default defineNuxtConfig({
       autoprefixer: {},
     },
   },
+  vue: {
+    compilerOptions: {
+      isCustomElement: (tag) => tag === "micr-io",
+    },
+  },
 });
