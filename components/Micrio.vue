@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { HTMLMicrioElement, Models } from "Micrio";
 
+const emit = defineEmits(["update"]);
+
 // How to do a language switch?
-// Can we also import JPEG2?
 
 const { id } = defineProps(["id"]);
 useHead({
@@ -22,16 +23,21 @@ onMounted(() => {
   const micrio = micrioRef.value;
 
   micrio.defaultSettings = {
+    noZoom: true,
     _markers: {
       autoStartTour: true,
       zoomOutAfterClose: true,
     },
   };
 
-  element.addEventListener("update", (e: any) => {
+  element.addEventListener("show", (e: any) => {
     tourUnsubscribeRef.value = micrio.state.tour.subscribe((tourData) => {
       tourRef.value = tourData;
     });
+  });
+
+  element.addEventListener("update", (e: any) => {
+    emit("update");
   });
 });
 
