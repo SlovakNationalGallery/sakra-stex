@@ -1,61 +1,61 @@
 <script setup lang="ts">
 import type { HTMLMicrioElement, Models } from "Micrio";
 
+// How to do a language switch?
+// Can we also import JPEG2?
+
 const { id } = defineProps(["id"]);
 useHead({
   title: "Micrio",
-  script: [{ src: "https://b.micr.io/micrio-4.1.min.js" }],
+  script: [{ src: "https://b.micr.io/micrio-4.4.min.js" }],
 });
 
-const micrio = ref<HTMLMicrioElement>();
-const tour = ref<
+const micrioRef = ref<HTMLMicrioElement>();
+const tourRef = ref<
   Models.ImageCultureData.MarkerTour | Models.ImageCultureData.VideoTour
 >();
+const tourUnsubscribeRef = ref<() => void>();
 
 onMounted(() => {
   const element = document.querySelector("micr-io")!;
-  element.addEventListener("show", () => {
-    micrio.value = document.querySelector("micr-io") as HTMLMicrioElement;
-  });
+  micrioRef.value = document.querySelector("micr-io") as HTMLMicrioElement;
+  const micrio = micrioRef.value;
 
-  element.addEventListener("marker-open", (e: any) => {
-    // Clicking on a marker also opens its tour
-    const markerId = e.detail.id as string;
-    const tour = micrio.value!.$current.$data.markerTours[0];
-    const tourStep = tour.steps.findIndex((step) => step === markerId);
-    micrio.value?.state.tour.set({ ...tour, currentStep: tourStep });
-  });
+  micrio.defaultSettings = {
+    _markers: {
+      autoStartTour: true,
+      zoomOutAfterClose: true,
+    },
+  };
 
   element.addEventListener("update", (e: any) => {
-    tour.value = micrio.value?.state.$tour;
+    tourUnsubscribeRef.value = micrio.state.tour.subscribe((tourData) => {
+      tourRef.value = tourData;
+    });
   });
 });
 
+onUnmounted(() => {
+  tourUnsubscribeRef.value?.();
+});
+
 function cancelTour() {
-  micrio.value?.state.tour.set(undefined);
+  micrioRef.value?.state.tour.set(undefined);
 }
 
 function changeStepBy(delta: number) {
-  const tour = micrio.value?.state.$tour as
-    | Models.ImageCultureData.MarkerTour
-    | undefined;
+  const micrio = micrioRef.value;
+  const tour = tourRef.value as Models.ImageCultureData.MarkerTour;
+  if (!micrio || !tour.goto) return;
 
-  if (tour?.currentStep === undefined) return;
+  if (delta > 0) {
+    tour.goto((tour.currentStep! + delta) % tour.steps.length);
+  }
 
-  const stepIndex = (() => {
-    const maxIndex = tour.steps.length - 1;
-    const nextIndex = tour.currentStep + delta;
-
-    if (nextIndex < 0) return maxIndex - 1 - (nextIndex % maxIndex);
-    if (nextIndex > maxIndex) return (nextIndex % maxIndex) - 1;
-    return nextIndex;
-  })();
-  const stepId = tour.steps[stepIndex];
-  const marker = micrio.value?.$current.$data.markers.find(
-    (marker) => marker.id === stepId
-  );
-
-  micrio.value?.state.marker.set(marker);
+  if (delta < 0) {
+    const nextStep = tour.currentStep! - (-delta % tour.steps.length);
+    tour.goto(nextStep < 0 ? tour.steps.length + nextStep : nextStep);
+  }
 }
 </script>
 
@@ -70,7 +70,7 @@ function changeStepBy(delta: number) {
     minimap="false"
   />
   <slot
-    :tour="tour"
+    :tour="tourRef"
     :cancelTour="cancelTour"
     :nextMarker="() => changeStepBy(1)"
     :previousMarker="() => changeStepBy(-1)"
