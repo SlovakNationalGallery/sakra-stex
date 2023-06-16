@@ -500,7 +500,9 @@ declare module "Micrio" {
       private micrio;
       /** The current {@link Models.ImageCultureData.MarkerTour} or {@link Models.ImageCultureData.VideoTour} store {@link SvelteStore.Writable} */
       readonly tour: Writable<
-        Models.ImageCultureData.VideoTour | Models.ImageCultureData.MarkerTour
+        | Models.ImageCultureData.VideoTour
+        | Models.ImageCultureData.MarkerTour
+        | undefined // ernest.walzel@sng.sk
       >;
       /** The current active {@link Models.ImageCultureData.MarkerTour} or {@link Models.ImageCultureData.VideoTour} */
       get $tour():
