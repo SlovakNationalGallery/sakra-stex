@@ -19,4 +19,5 @@ jobs:
           username: lab_sng
           key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           source: .output/public/*
+          strip_components: 2
           target: /var/www/sakra-stex
