@@ -78,7 +78,7 @@ function onUpdate({ tour }: { tour?: Object }) {
         v-if="showIntro"
         class="absolute bottom-20 left-20 whitespace-nowrap shadow-sm"
       >
-        <h1 class="text-white font-bold text-5xl drop-shadow-lg">
+        <h1 class="text-white font-bold text-5xl drop-shadow-lg font-display">
           Záleží na detailoch
         </h1>
         <p class="text-white text-lg mt-2 drop-shadow-lg">
