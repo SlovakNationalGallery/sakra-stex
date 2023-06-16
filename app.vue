@@ -1,4 +1,9 @@
 <script setup lang="ts">
+useHead({
+  // Do not index for now
+  meta: [{ name: "robots", content: "noindex" }],
+});
+
 const showIntro = ref(true);
 const showIntroTimer = useTimer(15000, () => (showIntro.value = true));
 
