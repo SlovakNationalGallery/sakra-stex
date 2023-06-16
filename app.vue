@@ -14,7 +14,7 @@ function onUpdate({ tour }: { tour?: Object }) {
 </script>
 
 <template>
-  <div class="bg-black absolute inset-0 overflow-hidden">
+  <div class="bg-black absolute inset-0 overflow-hidden font-body">
     <div class="h-full w-full">
       <ClientOnly>
         <Micrio
@@ -76,12 +76,14 @@ function onUpdate({ tour }: { tour?: Object }) {
     >
       <div
         v-if="showIntro"
-        class="absolute bottom-20 left-20 whitespace-nowrap shadow-sm"
+        class="absolute bottom-32 left-32 whitespace-nowrap"
       >
-        <h1 class="text-white font-bold text-5xl drop-shadow-lg font-display">
+        <h1
+          class="text-white font-bold text-[4.5rem] drop-shadow-lg font-display"
+        >
           Záleží na detailoch
         </h1>
-        <p class="text-white text-lg mt-2 drop-shadow-lg">
+        <p class="text-white text-2xl mt-2 drop-shadow-sm">
           Nechajte sa vtiahnuť do detailov umeleckých diel
         </p>
       </div>
