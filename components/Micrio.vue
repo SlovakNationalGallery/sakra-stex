@@ -33,6 +33,7 @@ onMounted(() => {
   micrio.defaultSettings = {
     noZoom: true,
     _markers: {
+      noTitles: true,
       autoStartTour: true,
       zoomOutAfterClose: true,
     },
@@ -46,6 +47,7 @@ onMounted(() => {
   });
 
   element.addEventListener("update", (e) => {
+    tourCancellationTimer.reset();
     emit("update", { tour: micrio?.state.$tour });
   });
 });
