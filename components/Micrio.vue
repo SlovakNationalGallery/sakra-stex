@@ -85,7 +85,10 @@ function cancelTour() {
   const micrio = micrioRef.value;
   if (!micrio) return;
   micrio.state.tour.set(undefined);
-  micrio.camera.flyToFullView();
+
+  props.coordinates
+    ? micrio.camera.flyToCoo(props.coordinates)
+    : micrio.camera.flyToFullView();
 }
 
 function changeStepBy(delta: number) {
