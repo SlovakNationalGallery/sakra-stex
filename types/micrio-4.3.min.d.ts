@@ -507,7 +507,8 @@ declare module "Micrio" {
       /** The current active {@link Models.ImageCultureData.MarkerTour} or {@link Models.ImageCultureData.VideoTour} */
       get $tour():
         | Models.ImageCultureData.VideoTour
-        | Models.ImageCultureData.MarkerTour;
+        | Models.ImageCultureData.MarkerTour
+        | undefined; // ernest.walzel@sng.sk;
       /** The current shown image's opened {@link Models.ImageCultureData.Marker} store {@link SvelteStore.Writable} */
       readonly marker: Writable<Models.ImageCultureData.Marker>;
       /** The current opened {@link Models.ImageCultureData.Marker} of the current shown {@link MicrioImage} */

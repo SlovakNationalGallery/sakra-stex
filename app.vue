@@ -1,15 +1,15 @@
 <script setup lang="ts">
-const showIntro = ref(true); // TODO true
-const showIntroTimer = useTimer(5000, () => (showIntro.value = true));
+const showIntro = ref(true);
+const showIntroTimer = useTimer(15000, () => (showIntro.value = true));
 
-function onUpdate() {
+function onUpdate({ tour }: { tour?: Object }) {
   showIntro.value = false;
-  showIntroTimer.reset();
+  if (tour) showIntroTimer.reset();
 }
 </script>
 
 <template>
-  <div class="bg-black absolute inset-0">
+  <div class="bg-black absolute inset-0 overflow-hidden">
     <div class="h-full w-full">
       <ClientOnly>
         <Micrio
@@ -65,10 +65,12 @@ function onUpdate() {
     >
       <div
         v-if="showIntro"
-        class="absolute bottom-20 left-20 whitespace-nowrap"
+        class="absolute bottom-20 left-20 whitespace-nowrap shadow-sm"
       >
-        <h1 class="text-white font-bold text-5xl">Záleží na detailoch</h1>
-        <p class="text-white text-lg mt-2">
+        <h1 class="text-white font-bold text-5xl drop-shadow-lg">
+          Záleží na detailoch
+        </h1>
+        <p class="text-white text-lg mt-2 drop-shadow-lg">
           Nechajte sa vtiahnuť do detailov umeleckých diel
         </p>
       </div>

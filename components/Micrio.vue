@@ -19,7 +19,9 @@ useHead({
 
 const micrioRef = ref<HTMLMicrioElement>();
 const tourRef = ref<
-  Models.ImageCultureData.MarkerTour | Models.ImageCultureData.VideoTour
+  | Models.ImageCultureData.VideoTour
+  | Models.ImageCultureData.MarkerTour
+  | undefined
 >();
 const tourUnsubscribeRef = ref<() => void>();
 
@@ -44,7 +46,7 @@ onMounted(() => {
   });
 
   element.addEventListener("update", (e) => {
-    emit("update");
+    emit("update", { tour: micrio?.state.$tour });
   });
 });
 
@@ -60,9 +62,10 @@ function cancelTour() {
 }
 
 function changeStepBy(delta: number) {
-  const micrio = micrioRef.value;
-  const tour = tourRef.value as Models.ImageCultureData.MarkerTour;
-  if (!micrio || !tour.goto) return;
+  const tour = micrioRef.value?.state.$tour as
+    | Models.ImageCultureData.MarkerTour
+    | undefined;
+  if (tour?.goto === undefined) return;
 
   if (delta > 0) {
     tour.goto((tour.currentStep! + delta) % tour.steps.length);
