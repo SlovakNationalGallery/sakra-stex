@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import type { HTMLMicrioElement, Models } from "Micrio";
 
+const props = defineProps<{
+  id: string;
+  cancelTourAfterMs?: number;
+}>();
 const emit = defineEmits(["update"]);
 
-// How to do a language switch?
+const tourCancellationTimer = useTimer(props.cancelTourAfterMs ?? 0, () => {
+  if (props.cancelTourAfterMs === undefined) return;
+  cancelTour();
+});
 
-const { id } = defineProps(["id"]);
 useHead({
   title: "Micrio",
   script: [{ src: "https://b.micr.io/micrio-4.3.min.js" }],
@@ -33,10 +39,11 @@ onMounted(() => {
   element.addEventListener("show", (e: any) => {
     tourUnsubscribeRef.value = micrio.state.tour.subscribe((tourData) => {
       tourRef.value = tourData;
+      tourCancellationTimer.reset();
     });
   });
 
-  element.addEventListener("update", (e: any) => {
+  element.addEventListener("update", (e) => {
     emit("update");
   });
 });
@@ -46,7 +53,10 @@ onUnmounted(() => {
 });
 
 function cancelTour() {
-  micrioRef.value?.state.tour.set(undefined as any); // Probably the typings aren't right here
+  const micrio = micrioRef.value;
+  if (!micrio) return;
+  micrio.state.tour.set(undefined);
+  micrio.camera.flyToFullView();
 }
 
 function changeStepBy(delta: number) {
