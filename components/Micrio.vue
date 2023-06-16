@@ -8,7 +8,7 @@ const emit = defineEmits(["update"]);
 const { id } = defineProps(["id"]);
 useHead({
   title: "Micrio",
-  script: [{ src: "https://b.micr.io/micrio-4.4.min.js" }],
+  script: [{ src: "https://b.micr.io/micrio-4.3.min.js" }],
 });
 
 const micrioRef = ref<HTMLMicrioElement>();
@@ -46,7 +46,7 @@ onUnmounted(() => {
 });
 
 function cancelTour() {
-  micrioRef.value?.state.tour.set(undefined);
+  micrioRef.value?.state.tour.set(undefined as any); // Probably the typings aren't right here
 }
 
 function changeStepBy(delta: number) {

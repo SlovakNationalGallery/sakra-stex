@@ -16,7 +16,7 @@ declare module "Micrio" {
     /** Get the current image view rectangle
      * @returns The current screen viewport
      */
-    getView: () => View | undefined;
+    getView: () => View | null;
     /** Set the screen viewport
      * @param view The viewport
      * @param noLimit Don't restrict the boundaries
@@ -47,13 +47,7 @@ declare module "Micrio" {
      * @param abs Use absolute browser window coordinates
      * @returns The screen XY coordinates in pixels
      */
-    getXY: (
-      x: number,
-      y: number,
-      abs?: boolean,
-      radius?: number,
-      rotation?: number
-    ) => Float64Array;
+    getXY: (x: number, y: number, abs?: boolean) => Float64Array;
     /** Get the current image scale */
     getScale: () => number;
     /** Get a custom matrix for 360 placed embeds
@@ -108,7 +102,7 @@ declare module "Micrio" {
     /** Fly to a specific view
      * @returns Promise when the animation is done
      * @param view The viewport to fly to
-     * @param opts Optional animation settings
+     * @param opts Optional settings
      */
     flyToView: (
       view: View,
@@ -125,8 +119,6 @@ declare module "Micrio" {
         isJump?: boolean;
         /** Limit the target viewport */
         limit?: boolean;
-        /** For omni objects: image index to animate to */
-        omniIndex?: number;
       }
     ) => Promise<void>;
     /** Fly to a full view of the image
@@ -154,6 +146,13 @@ declare module "Micrio" {
       speed?: number,
       limited?: boolean
     ) => Promise<void>;
+    /** Do a "jump" animation to the specific view
+     * @returns Promise when the animation is done
+     * @param view The viewport to fly to
+     * @param duration A forced duration in ms of the animation
+     * @param speed A non-default camera speed
+     */
+    jumpToView(view: View, duration?: number, speed?: number): Promise<void>;
     /** Do a zooming animation
      * @param delta The amount to zoom
      * @param duration A forced duration in ms of the animation
@@ -166,8 +165,8 @@ declare module "Micrio" {
     zoom: (
       delta: number,
       duration?: number,
-      x?: number | undefined,
-      y?: number | undefined,
+      x?: number,
+      y?: number,
       speed?: number,
       noLimit?: boolean
     ) => Promise<void>;
@@ -218,8 +217,6 @@ declare module "Micrio" {
     getPitch: () => number;
     /** Set the relative {@link View} to render to */
     setArea(v: View, direct?: boolean, noDispatch?: boolean): void;
-    /** For omni objects */
-    setOmniSettings(): void;
   }
   /** Internal HTML <canvas> information state */
   export class ViewRect {
@@ -383,7 +380,7 @@ declare module "Micrio" {
      * @returns Promise when the image is added
      */
     addEmbed: (
-      image: MicrioImage | Models.Omni.Frame,
+      image: MicrioImage,
       parent: MicrioImage,
       opacity?: number
     ) => Promise<void>;
@@ -415,10 +412,6 @@ declare module "Micrio" {
      * @returns Whether the user is using mouse/gestures to navigate right now
      */
     get isNavigating(): boolean;
-    /** Hook all event listeners */
-    hook(): void;
-    /** Unhook all event listeners */
-    unhook(): void;
     /** Hook keyboard event listeners */
     hookKeys(): void;
     /** Unhook keyboard event listeners */
@@ -507,25 +500,20 @@ declare module "Micrio" {
       private micrio;
       /** The current {@link Models.ImageCultureData.MarkerTour} or {@link Models.ImageCultureData.VideoTour} store {@link SvelteStore.Writable} */
       readonly tour: Writable<
-        | Models.ImageCultureData.VideoTour
-        | Models.ImageCultureData.MarkerTour
-        | undefined
+        Models.ImageCultureData.VideoTour | Models.ImageCultureData.MarkerTour
       >;
       /** The current active {@link Models.ImageCultureData.MarkerTour} or {@link Models.ImageCultureData.VideoTour} */
       get $tour():
         | Models.ImageCultureData.VideoTour
-        | Models.ImageCultureData.MarkerTour
-        | undefined;
+        | Models.ImageCultureData.MarkerTour;
       /** The current shown image's opened {@link Models.ImageCultureData.Marker} store {@link SvelteStore.Writable} */
-      readonly marker: Writable<Models.ImageCultureData.Marker | undefined>;
-      /** The current hovered marker */
-      readonly markerHoverId: Writable<string | undefined>;
+      readonly marker: Writable<Models.ImageCultureData.Marker>;
       /** The current opened {@link Models.ImageCultureData.Marker} of the current shown {@link MicrioImage} */
-      get $marker(): Models.ImageCultureData.Marker | undefined;
+      get $marker(): Models.ImageCultureData.Marker;
       /** The current opened popup */
-      readonly popup: Writable<Models.ImageCultureData.Marker | undefined>;
+      readonly popup: Writable<Models.ImageCultureData.Marker>;
       /** The current opened custom content page */
-      readonly popover: Writable<PopoverType | undefined>;
+      readonly popover: Writable<PopoverType>;
       /** UI controls settings */
       ui: {
         /** Show/hide main controls */
@@ -550,7 +538,7 @@ declare module "Micrio" {
        * micrio.state.set(state);
        * ```
        */
-      get(): MicrioStateJSON | undefined;
+      get(): MicrioStateJSON;
       /**
        * Sets the state from a `MicrioStateJSON` object, output by the function above here.
        * This works on any Micrio instance!
@@ -569,9 +557,9 @@ declare module "Micrio" {
     class Image {
       private image;
       /** The current image viewport store {@link SvelteStore.Writable} */
-      readonly view: Writable<View | undefined>;
+      readonly view: Writable<View>;
       /** The current or last known viewport of this image */
-      get $view(): View | undefined;
+      get $view(): View;
       /**
        * The current active marker store {@link SvelteStore.Writable}.
        * You can either set this to be a {@link Models.ImageCultureData.Marker} JSON object, or `string`, which is the ID
@@ -581,7 +569,7 @@ declare module "Micrio" {
         Models.ImageCultureData.Marker | string | undefined
       >;
       /** The current active Marker instance */
-      get $marker(): Models.ImageCultureData.Marker | undefined;
+      get $marker(): Models.ImageCultureData.Marker;
     }
   }
   /**
@@ -595,15 +583,15 @@ declare module "Micrio" {
     /** All available canvases */
     readonly canvases: MicrioImage[];
     /** Current main {@link MicrioImage} store {@link SvelteStore.Writable}. Its value can be referred to using the {@link $current} property */
-    readonly current: Writable<MicrioImage | undefined>;
+    readonly current: Writable<MicrioImage>;
     /** Currently visible canvases */
     readonly visible: Writable<MicrioImage[]>;
     /** The current active and shown {@link MicrioImage}, returning the current value of the {@link current} store {@link SvelteStore.Writable}
      * @readonly
      */
-    get $current(): MicrioImage | undefined;
+    get $current(): MicrioImage;
     /** The virtual camera instance to control the current main image views */
-    get camera(): Camera | undefined;
+    get camera(): Camera;
     /** The Micrio sizing and `<canvas>` controller */
     readonly canvas: Canvas;
     /** User input browser event handlers */
@@ -648,11 +636,9 @@ declare module "Micrio" {
      */
     close(img: MicrioImage): void;
     private loadGallery;
-    gridInfoData:
-      | {
-          images: Models.ImageInfo.ImageInfo[];
-        }
-      | undefined;
+    gridInfoData: {
+      images: Models.ImageInfo.ImageInfo[];
+    };
     private setGrid;
     private getArchiveIndex;
   }
@@ -709,7 +695,7 @@ declare module "Micrio" {
     /** The HTML grid will stay visible and clickable */
     clickable: boolean;
     /** The current full-view focussed image */
-    readonly focussed: Writable<MicrioImage | undefined>;
+    readonly focussed: Writable<MicrioImage>;
     /** Show the markers of these elements */
     readonly markersShown: Writable<MicrioImage[]>;
     /** The grid state history */
@@ -836,11 +822,7 @@ declare module "Micrio" {
      * @param view Optional viewport to focus on
      * @returns Promise for when the transition completes
      */
-    focus(
-      img: MicrioImage | undefined,
-      view?: View,
-      duration?: number
-    ): Promise<void>;
+    focus(img: MicrioImage, view?: View, duration?: number): Promise<void>;
     /** Unfocusses any currently focussed image */
     blur(): void;
     private tourEvent;
@@ -869,52 +851,6 @@ declare module "Micrio" {
     getRelativeView(image: MicrioImage, view: View): View;
   }
   /**
-   * Swipeable switching image sequence
-   * @author Marcel Duin <marcel@micr.io>
-   * @copyright Q42 Internet BV, Micrio, 2015 - 2023
-   * @link https://micr.io/ , https://q42.nl/en/
-   *
-   */
-  export class GallerySwiper {
-    private micrio;
-    private length;
-    goto: (i: number) => void;
-    private opts;
-    private startIndex;
-    private startX;
-    private snapTo;
-    private raf;
-    private pointers;
-    private isFullWidth;
-    private startedWithShift;
-    private firstTouchId;
-    private image;
-    rotation: number;
-    getCurrentIndex: () => number;
-    setCurrentIndex: (i: number) => void;
-    constructor(
-      micrio: HTMLMicrioElement,
-      length: number,
-      goto: (i: number) => void,
-      opts?: {
-        sensitivity?: number;
-        continuous?: boolean;
-        coverLimit?: boolean;
-      }
-    );
-    destroy(): void;
-    private isDragging;
-    /** Drag start */
-    private dStart;
-    /** Drag move */
-    private dMove;
-    /** Drag stop */
-    private dStop;
-    private mouseleave;
-    private swipeEnd;
-    private animateTo;
-  }
-  /**
    * An individual Micrio image
    * @author Marcel Duin <marcel@micr.io>
    * @copyright Q42 Internet BV, Micrio, 2015 - 2023
@@ -922,7 +858,6 @@ declare module "Micrio" {
    */
   export class MicrioImage {
     wasm: Wasm;
-    private attr;
     opts: {
       /** Optional sub area for partial / embedded images */
       area?: View;
@@ -936,35 +871,37 @@ declare module "Micrio" {
     /** The image id */
     readonly id: string;
     /** The Micrio info data Readable store */
-    readonly info: Readable<Models.ImageInfo.ImageInfo | undefined>;
+    readonly info: Readable<Models.ImageInfo.ImageInfo>;
     /** The image info data
      * @readonly
      */
-    get $info(): Models.ImageInfo.ImageInfo | undefined;
+    get $info(): Models.ImageInfo.ImageInfo;
     /** The Micrio culture data Writable */
     readonly data: Writable<
       Models.ImageCultureData.ImageCultureData | undefined
     >;
     /** The current CultureData */
-    get $data(): Models.ImageCultureData.ImageCultureData | undefined;
+    get $data(): Models.ImageCultureData.ImageCultureData;
+    /** The current data language Writable */
+    readonly lang: Writable<string>;
+    /** The current CultureData */
+    get $lang(): string;
     /** State manager */
     readonly state: State.Image;
     /** The virtual camera instance to control the current main image views */
     readonly camera: Camera;
     /** The 2D or 360 video MediaElement */
-    readonly video: Writable<HTMLVideoElement | undefined>;
+    readonly video: Writable<HTMLVideoElement>;
     /** The canvas is currently visible
      * @readonly
      */
     readonly visible: Writable<boolean>;
-    /** Gallery swiper instance */
-    swiper: GallerySwiper | undefined;
     /** Rendered pixel rectangle [left, top, width, height] */
     readonly viewport: Writable<View>;
     /** Embedded in-image children */
     readonly embeds: MicrioImage[];
     /** Grid controller */
-    grid: Grid | undefined;
+    grid: Grid;
     private loadScript;
     private loadStyle;
     /** Enrich marker tour data with external tour step info and durations
@@ -1006,7 +943,6 @@ declare module "Micrio" {
     private startedAt;
     /** Unhook user events while playing */
     private unhookEvents;
-    private content;
     /** Micrio instance */
     private micrio;
     /** Set the data */
@@ -1054,9 +990,6 @@ declare module "Micrio" {
    *
    */
   export namespace Models {
-    type RevisionType = {
-      [key: string]: number;
-    };
     /**
      * # Base image data
      *
@@ -1103,8 +1036,6 @@ declare module "Micrio" {
          * @default autoloaded
          */
         version: number;
-        /** For V4.4+: published revisions per language */
-        revision?: RevisionType;
         /** The original image width
          * @default autoloaded
          */
@@ -1125,8 +1056,12 @@ declare module "Micrio" {
         settings: Partial<ImageInfo.Settings>;
         /** The image title (default: autoloaded) */
         title?: string;
+        /** The image slug (default: autoloaded) */
+        slug?: string;
         /** The initial data language */
         lang?: string;
+        /** The available image data languages, comma-separated (default: autoloaded) */
+        cultures?: string;
         /** The image is 360 degrees */
         is360?: boolean;
         /** The image tiles are in WebP format */
@@ -1149,11 +1084,11 @@ declare module "Micrio" {
       /** Micrio image settings, which is included as {@link ImageInfo}`.settings`. */
       type Settings = {
         /** The starting viewport (`[x0,y0,x1,y1]`) */
-        view?: View;
+        view: View;
         /** Restrict navigation to this viewport (`[x0,y0,x1,y1]`) */
         restrict?: View;
-        /** Load a cover-initing image focussed on this coordinate (`[x, y]`) */
-        focus?: [number, number];
+        /** Load the image focussed on this coordinate (`[x, y]`) */
+        focus?: number[];
         /** Use a custom uri for the info json file */
         infoUrl?: string;
         /** Render this image as a static image */
@@ -1242,6 +1177,8 @@ declare module "Micrio" {
         audio?: boolean;
         /** The starting audio volume [0-1] (default: `1`) */
         startVolume?: number;
+        /** The music audio volume [0-1] (default: `1`) */
+        musicVolume?: number;
         /** The audio volume when other media is playing `[0-1]` (default: `0`) */
         mutedVolume?: number;
         /** Mute the audio when the current browser tab loses focus */
@@ -1274,8 +1211,6 @@ declare module "Micrio" {
         };
         /** All markers are scaled with the image */
         markersScale?: boolean;
-        /** FOR OMNI OBJECTS */
-        omni?: OmniSettings;
         /** Optional marker settings */
         _markers?: MarkerSettings;
         /** Optional settings for 360 images/video */
@@ -1319,24 +1254,10 @@ declare module "Micrio" {
         /** Grid: transition duration going back, in seconds */
         gridTransitionDurationOut?: number;
       };
-      type OmniSettings = {
-        /** Number of frames */
-        frames: number;
-        /** Starting frame index */
-        startIndex: number;
-        /** The camera field of view in radians */
-        fieldOfView: number;
-        /** The camera vertical angle in radians */
-        verticalAngle: number;
-        /** The distance of the object center to the camera */
-        distance: number;
-        /** Put the labels on the side of the object */
-        sideLabels?: boolean;
-      };
       /** Image-wide marker settings */
       type MarkerSettings = {
-        /** An image-wise custom marker icon */
-        markerIcon?: Assets.Image;
+        /** The uri of the default marker icon */
+        markerIcon?: string;
         /** The default marker color */
         markerColor?: string;
         /** The default marker size in px */
@@ -1383,8 +1304,6 @@ declare module "Micrio" {
         hideMarkersDuringTour?: boolean;
         /** Keep popup opened in between marker tour steps */
         keepPopupsDuringTourTransitions?: boolean;
-        /** Optional custom uploaded icons */
-        customIcons?: Assets.Image[];
       };
       /** Custom interface settings */
       type UserInterfaceSettings = {
@@ -1438,7 +1357,8 @@ declare module "Micrio" {
      * * Markers
      * * Marker tours
      * * Video tours
-     * * Music
+     * * Background audio
+     * * Positional audio
      * * Custom menu screens and content pages
      *
      * This file is most likely created in the [Micrio editor](https://dashboard.micr.io/) and this file is published separately per language. By default this is English, `data.en.json`.
@@ -1491,49 +1411,49 @@ declare module "Micrio" {
     namespace ImageCultureData {
       /** The main data JSON structure */
       type ImageCultureData = {
-        /** Post 4.4: Save revision */
-        revision?: RevisionType;
-        /** Localized image details */
-        i18n?: {
-          [key: string]: ImageDetailsCultureData;
-        };
         /** Markers */
         markers?: ImageCultureData.Marker[];
         /** Marker tours */
         markerTours?: ImageCultureData.MarkerTour[];
         /** Video tours */
         tours?: ImageCultureData.VideoTour[];
-        /** In-image embeds */
-        embeds?: ImageCultureData.Embed[];
         /** Custom menu pages */
         pages?: ImageCultureData.Menu[];
-        /** Music playlist */
-        music?: {
-          /** The audio assets */
-          items: Assets.Audio[];
-          /** Loop the playlist */
-          loop: boolean;
-          /** The music audio volume [0-1] (default: `1`) */
-          volume?: number;
+        /** Image audio data */
+        audio?: {
+          /** Music playlist */
+          playlist: {
+            /** The audio assets */
+            items: Assets.Audio[];
+            /** Loop the playlist */
+            loop: boolean;
+          };
+          /** Positional audio asset items */
+          locations: Assets.AudioLocation[];
         };
-      };
-      interface ImageDetailsCultureData {
-        /** Optional lang-specific image title */
-        title?: string;
         /** Optional lang-specific image description */
         description?: string;
         /** Image copyright information */
         copyright?: string;
         /** Original source URI */
         sourceUrl?: string;
-      }
-      interface MarkerCultureData {
+      };
+      /** A Marker */
+      type Marker = {
+        /** The marker ID */
+        id: string;
+        /** The relative marker X coordinate [0-1] */
+        x: number;
+        /** The relative marker Y coordinate [0-1] */
+        y: number;
+        /** The viewport to zoom to when the marker is opened */
+        view?: View;
         /** The main marker title */
         title?: string;
-        /** The marker url slug */
-        slug?: string;
         /** Alternative title to display as marker label */
         label?: string;
+        /** The marker url slug */
+        slug?: string;
         /** Marker main body HTML */
         body?: string;
         /** Marker main body raw text */
@@ -1544,35 +1464,8 @@ declare module "Micrio" {
         bodySecondary?: string;
         /** Marker secondary body raw text */
         markdownSecondary?: string;
-        /** Audio asset */
-        audio?: Assets.Audio;
-        /** An optional iframe embed url */
-        embedUrl?: string;
-        /** Embed description */
-        embedDescription?: string;
-      }
-      /** A Marker */
-      type Marker = {
-        /** The marker ID */
-        id: string;
-        /** The relative marker X coordinate [0-1] */
-        x: number;
-        /** The relative marker Y coordinate [0-1] */
-        y: number;
-        i18n?: {
-          [key: string]: MarkerCultureData;
-        };
-        /** Omni-objects: radius from center */
-        radius?: number;
-        /** Omni-objects: offset rotation in radians */
-        rotation?: number;
-        /** Omni-objects: custom visibility between these radians */
-        visibleArc?: [number, number];
-        /** The viewport to zoom to when the marker is opened */
-        view?: View;
         /** Content type */
         type?:
-          | "default"
           | "image"
           | "audio"
           | "video"
@@ -1582,30 +1475,38 @@ declare module "Micrio" {
           | "cluster";
         /** Marker classnames */
         class?: string;
+        /** Audio asset */
+        audio?: Assets.Audio;
         /** Autoplay the audio asset when the marker is opened */
         audioAutoPlay?: boolean;
         /** Don't draw a marker element */
         noMarker?: boolean;
         /** A custom HTML element instead of the default <button> */
         htmlElement?: HTMLElement;
+        /** Embedded images into main image */
+        embedImages?: Embed[];
+        /** An optional iframe embed url */
+        embedUrl?: string;
+        /** Embed description */
+        embedDescription?: string;
         /** Open the iframe embed in a full-window popover overlay */
         embedInPopover?: boolean;
         /** Having the embed iframe printed mutes audio */
         embedMutesAudio?: boolean;
+        /** Put the iframe embed as the first image embed */
+        embedInEmbed?: boolean;
+        /** Put the iframe embed into the image embed on image load */
+        embedInEmbedImmediate?: boolean;
         /** Images inside marker popup */
         images?: Assets.Image[];
         /** Video tour which plays when the marker is opened */
         videoTour?: VideoTour;
-        /** Positional audio asset */
-        positionalAudio?: Assets.AudioLocation;
         /** [Spaces] Click action for spaces */
         action?: number;
         /** [Spaces] Click action key */
         actionKey?: string;
         /** [Spaces] Value for action */
         actionValue?: string;
-        /** Optional function that overrides all behavior */
-        onclick?: (m: Models.ImageCultureData.Marker) => void;
         /** Additional options */
         data?: MarkerData;
       };
@@ -1613,8 +1514,6 @@ declare module "Micrio" {
       type MarkerData = {
         /** A custom marker icon image */
         icon?: Assets.Image;
-        /** A predefined custom icon idx in MarkerSettings */
-        customIconIdx?: number;
         /** This marker links to this image */
         micrioLink?: ImageInfo.ImageInfo;
         /** This marker opens secondary split image with id */
@@ -1633,6 +1532,12 @@ declare module "Micrio" {
         staticPopup?: boolean;
         /** Don't open a large image viewer/gallery on image click */
         preventImageOpen?: boolean;
+        /** The marker in-image embeds are the marker trigger instead of a regular marker button */
+        embedsAreMarker?: boolean;
+        /** The marker in-image embeds stay visible after closing the marker */
+        keepEmbedsOpen?: boolean;
+        /** Force HTML rendering of image embeds */
+        embedsAsHtml?: boolean;
         /** Force a marker popup no matter what */
         notEmpty?: boolean;
         /** Jump the camera when opening this marker */
@@ -1658,11 +1563,11 @@ declare module "Micrio" {
        * iframe embed, or simple empty HTML element (Spaces).
        * This is created in the [Micrio editor](https://dashboard.micr.io/) or Spaces.
        */
-      type Embed = Partial<ImageInfo.ImageInfo> & {
+      type Embed = Partial<MicrioImage> & {
         /** The area inside the main image to place the embed */
         area: View;
-        /** Original asset url */
-        src?: string;
+        /** An optional static file url */
+        fileUrl?: string;
         /** An optional iframe src url */
         frameSrc?: string;
         /** Optional title */
@@ -1675,16 +1580,8 @@ declare module "Micrio" {
         height?: number;
         /** Optional isPng */
         isPng?: boolean;
-        /** IsWebP */
-        isWebP?: boolean;
         /** Opacity */
         opacity?: number;
-        /** Click interaction */
-        clickAction?: "markerId" | "href";
-        /** Click action target */
-        clickTarget?: string;
-        /** Opens link in new window */
-        clickTargetBlank?: boolean;
         /** Relative scale for embed in 360 */
         scale?: number;
         /** X rotation in 360 */
@@ -1693,27 +1590,29 @@ declare module "Micrio" {
         rotY?: number;
         /** Z rotation in 360 */
         rotZ?: number;
-        /** A video asset */
-        video?: Assets.Video;
+        /** [Spaces] A CF video ID */
+        videoId?: string;
+        /** [Spaces] A CF video duration */
+        duration?: number;
+        /** [Spaces] CF video is muted */
+        muted?: boolean;
+        /** [Spaces] CF video loops */
+        loop?: boolean;
+        /** [Spaces] CF video autoplays */
+        autoplay?: boolean;
       };
-      interface TourCultureData {
-        /** The tour title */
-        title?: string;
-        /** The tour url slug */
-        slug?: string;
-        /** The tour description */
-        description?: string;
-      }
       /** The MicrioTour abstract shared class for both {@link MarkerTour} and {@link VideoTour}
        * @abstract
        */
       type Tour = {
         /** The tour id */
         id: string;
-        /** Localized tour culture data */
-        i18n?: {
-          [key: string]: TourCultureData;
-        };
+        /** The tour title */
+        title: string;
+        /** The tour description */
+        description: string;
+        /** The tour url slug */
+        slug: string;
         /** Autostart this tour on image load */
         autostart?: boolean;
         /** Auto-minimize controls while playing and idle */
@@ -1723,44 +1622,32 @@ declare module "Micrio" {
         /** Exit the tour on finish */
         closeOnFinish?: boolean;
       };
-      /** A single videotour timeline viewport */
-      type VideoTourView = {
-        /** Start time in seconds */
-        start: number;
-        /** End time in seconds */
-        end: number;
-        /** Viewport name */
-        title?: string;
-        /** View rectangle */
-        rect: View;
-      };
-      interface VideoTourCultureData extends TourCultureData {
-        /** The tour duration in seconds */
-        duration: number;
-        /** An optional audio file */
-        audio?: Assets.Audio;
-        /** Optional subtitles */
-        subtitle?: Assets.Subtitle;
-        /** The timeline data */
-        timeline: VideoTourView[];
-        /** Custom events in tour timeline */
-        events: Event[];
-      }
       /**
        * A Micrio video tour -- a timed sequence of viewport, with optional audio file.
        * This is created in the [Micrio editor](https://dashboard.micr.io/).
        */
       type VideoTour = Tour & {
-        /** Localized videotour culture data */
-        i18n?: {
-          [key: string]: VideoTourCultureData;
-        };
+        /** The tour duration in seconds */
+        duration: number;
+        /** The timeline data */
+        timeline: {
+          /** Start time in seconds */
+          start: number;
+          /** End time in seconds */
+          end: number;
+          /** View rectangle */
+          rect: View;
+        }[];
+        /** Custom events in tour timeline */
+        events?: Event[];
+        /** An optional audio file */
+        audio?: Assets.Audio;
         /** Don't hide the markers when running */
         keepMarkers?: boolean;
         /** Don't disable user navigation when running */
         keepInteraction?: boolean;
-        /** Current running tour instance */
-        instance?: VideoTourInstance;
+        /** Optional subtitles */
+        subtitle?: Assets.Subtitle;
       };
       /** Timed events inside a {@link ImageCultureData.VideoTour} */
       type Event = {
@@ -1782,8 +1669,8 @@ declare module "Micrio" {
       type MarkerTour = Tour & {
         /** Tour steps */
         steps: string[];
-        /** No user controls */
-        noControls?: boolean;
+        /** Show the tour controls */
+        controls?: boolean;
         /** Optional tour image asset */
         image?: Assets.Image;
         /** This is a scrolling tour */
@@ -1814,7 +1701,8 @@ declare module "Micrio" {
         markerId: string;
         marker: Marker;
         micrioId: string;
-        duration: number;
+        title?: string;
+        duration?: number;
         imageHasOtherMarkers?: boolean;
         startView?: View;
         chapter?: number;
@@ -1825,26 +1713,14 @@ declare module "Micrio" {
         /** Media has ended */
         ended?: boolean;
       };
-      interface MenuCultureData {
-        /** The menu title */
-        title?: string;
-        /** For page: iframe embed */
-        embed?: string;
-        /** For page: content HTML */
-        content?: string;
-      }
       /**
        * A custom pop-out menu containing content pages or direct external links to
        * websites, or direct links to opening a marker.
        * This is created in the [Micrio editor](https://dashboard.micr.io/).
        */
       type Menu = {
-        /** The menu ID */
-        id: string;
-        /** Localized culture data */
-        i18n?: {
-          [key: string]: MenuCultureData;
-        };
+        /** The menu title */
+        title: string;
         /** Child menu elements */
         children?: Menu[];
         /** Open this marker when clicking menu */
@@ -1853,87 +1729,75 @@ declare module "Micrio" {
         link?: string;
         /** Optional direct action function when clicked */
         action?: Function;
+        /** For page: iframe embed */
+        embed?: string;
         /** For page: page image */
-        image?: Assets.Image;
+        image?: string;
+        /** For page: content HTML */
+        content?: string;
+        /** For page: content markdown */
+        markdown?: string;
       };
     }
     namespace Assets {
-      type Asset = {
-        /** The asset title (not filename) */
-        title: string;
-        /** The asset file name */
-        fileName?: string;
-        /** The file uri */
-        src: string;
-        /** File size in bytes */
-        size: number;
-        /** Created */
-        uploaded: number;
-      };
-      export type Audio = Asset & {
+      type Audio = {
         /** The sample duration */
         duration: number;
-        /** The sample volume */
-        volume: number;
+        /** The item id */
+        id: string;
+        /** The sample title */
+        title: string;
+        /** The sample file name */
+        fileName: string;
+        /** The audio file uri
+         * @deprecated
+         */
+        fileUrl: string;
+        /** The audio file uri */
+        src: string;
       };
-      export type AudioLocation = Audio & {
+      type AudioLocation = Audio & {
         /** Autoplay the sample */
-        alwaysPlay: boolean;
+        autoplay: boolean;
         /** Loop the audio */
         loop: boolean;
-        /** Pause X seconds between plays */
-        repeatAfter: number;
         /** Don't play on mobile */
         noMobile: boolean;
         /** The radius of the audible circle */
         radius: number;
+        /** Pause X seconds between plays */
+        repeatAfter: number;
+        /** The sample volume */
+        volume: number;
+        /** The x coordinate */
+        x: number;
+        /** The y coordinate */
+        y: number;
       };
       /** An image asset uploaded in the Micrio editor */
-      export type Image = Asset & {
+      type Image = {
         id?: string;
         /** The image original width */
         width: number;
         /** The image original height */
         height: number;
+        /** Original image source uri */
+        src?: string;
         /** If the image is available as Micrio image, its ID */
-        micrioId?: string;
+        micrioId: string;
         /** If the image has a Micrio version, optional alternative image tile ID */
         tilesId?: string;
-        /** Is PNG */
-        isPng?: boolean;
-        /** IsWebP */
-        isWebP?: boolean;
-        /** 4.4 translatable description */
-        i18n?: {
-          [key: string]: {
-            description?: string;
-          };
-        };
+        /** Image title / filename */
+        title?: string;
+        /** The image description */
+        description?: string;
       };
-      export type Video = Asset & {
-        /** The video width */
-        width: number;
-        /** The video height */
-        height: number;
-        /** The video duration */
-        duration: number;
-        /** Video is muted */
-        muted: boolean;
-        /** Video loops */
-        loop: boolean;
-        /** Video loops after X seconds waiting */
-        loopAfter?: number;
-        /** Video autoplays */
-        autoplay: boolean;
-        /** Cloudflare Stream ID */
-        streamId?: string;
-        /** Show controls */
-        controls: boolean;
-        /** Video has alpha transparency */
-        transparent: boolean;
+      type Subtitle = {
+        fileSize: number;
+        fileUrl: string;
+        mimeType: string;
+        title: string;
       };
-      export type Subtitle = Asset;
-      export {};
     }
   }
   /** The Micrio version */
@@ -2007,6 +1871,7 @@ declare module "Micrio" {
      * **Individual `MicrioImage`** |||
      * | .{@link Micrio.MicrioImage.info} | {@link Micrio.MicrioImage.$info} | {@link Readable}&lt;{@link Micrio.Models.ImageInfo}&gt; | The static image base info |
      * | .{@link Micrio.MicrioImage.data} | {@link Micrio.MicrioImage.$data} | {@link Writable}&lt;{@link Micrio.Models.ImageCultureData}&gt; | The image data (markers, tours, etc) |
+     * | .{@link Micrio.MicrioImage.lang} | {@link Micrio.MicrioImage.$lang} | {@link Writable}&lt;`string`&gt; | The current image data culture value |
      * **`MicrioImage.state` controller** |||
      * | .{@link Micrio.State.Image.view} | {@link Micrio.State.Image.$view} | {@link Writable}&lt;{@link Micrio.View}&gt; | The current viewport |
      * | .{@link Micrio.State.Main.marker} | {@link Micrio.State.Main.$marker} | {@link Writable}&lt;{@link Micrio.Models.ImageCultureData.Marker}&gt; | The current opened marker of this image |
