@@ -25,31 +25,37 @@ function onUpdate({ tour }: { tour?: Object }) {
         >
           <!-- Controls -->
           <div
-            class="absolute inset-x-0 bottom-0 flex justify-center p-12 pointer-events-none overflow-hidden"
+            class="absolute inset-x-0 bottom-0 flex justify-end p-16 pointer-events-none overflow-hidden"
           >
             <Transition
               enter-from-class="opacity-0 translate-y-24"
               enter-to-class="opacity-100"
-              enter-active-class="transition-all duration-500"
+              enter-active-class="transition-all duration-500 ease-out"
               leave-from-class="opacity-100"
               leave-to-class="opacity-0 translate-y-24"
-              leave-active-class="transition-all duration-500"
+              leave-active-class="transition-all duration-500 ease-in"
             >
               <div
                 v-if="micrio.tour"
-                class="w-60 h-24 bg-green-500 grid grid-cols-3 p-2 gap-2 pointer-events-auto"
+                class="p-4 bg-white grid grid-cols-3 rounded-[5rem] gap-4 pointer-events-auto drop-shadow-lg shadow-black/70"
               >
                 <button
-                  class="bg-black text-white"
+                  class="w-14 h-14 bg-black/5 active:bg-black/10 flex items-center justify-center rounded-full"
+                  @click="micrio.cancelTour"
+                >
+                  <img src="~/assets/img/x-mark.svg" />
+                </button>
+                <button
+                  class="w-14 h-14 bg-black/5 active:bg-black/10 flex items-center justify-center rounded-full"
                   @click="micrio.previousMarker"
                 >
-                  &lt;
+                  <img src="~/assets/img/arrow-left.svg" />
                 </button>
-                <button class="bg-black text-white" @click="micrio.cancelTour">
-                  x
-                </button>
-                <button class="bg-black text-white" @click="micrio.nextMarker">
-                  &gt;
+                <button
+                  class="w-14 h-14 bg-black/5 active:bg-black/10 flex items-center justify-center rounded-full"
+                  @click="micrio.nextMarker"
+                >
+                  <img src="~/assets/img/arrow-left.svg" class="rotate-180" />
                 </button>
               </div>
             </Transition>
