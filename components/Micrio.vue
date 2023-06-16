@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import type { HTMLMicrioElement, Models } from "Micrio";
+import type { Coords, HTMLMicrioElement, Models } from "Micrio";
 
 const props = defineProps<{
   id: string;
   cancelTourAfterMs?: number;
+  coordinates?: Coords;
 }>();
 const emit = defineEmits(["update"]);
 
@@ -40,6 +41,10 @@ onMounted(() => {
   };
 
   element.addEventListener("show", (e: any) => {
+    if (props.coordinates) {
+      micrio.camera.flyToCoo(props.coordinates);
+    }
+
     tourUnsubscribeRef.value = micrio.state.tour.subscribe((tourData) => {
       tourRef.value = tourData;
       tourCancellationTimer.reset();
@@ -55,6 +60,26 @@ onMounted(() => {
 onUnmounted(() => {
   tourUnsubscribeRef.value?.();
 });
+
+watch(
+  () => props.coordinates,
+  (coordinates) => {
+    const micrio = micrioRef.value;
+    if (!micrio) return;
+    // Ignore coordinates if there's a marker selected
+    if (micrio.state.$marker) return;
+
+    if (coordinates) {
+      micrio.camera.flyToCoo(coordinates);
+      return;
+    }
+
+    if (coordinates === undefined) {
+      micrioRef.value?.camera.flyToFullView();
+      return;
+    }
+  }
+);
 
 function cancelTour() {
   const micrio = micrioRef.value;
