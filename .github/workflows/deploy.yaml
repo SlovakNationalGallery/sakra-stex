@@ -1,4 +1,4 @@
-name: CI
+name: Deploy
 on:
   push:
     branches: [main]
@@ -12,3 +12,10 @@ jobs:
         run: npm install
       - name: Build
         run: npx nuxi generate
+      - name: copy file via ssh
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: webumenia.sk
+          fingerprint: "2J8XrBxXtH+d+8RvvPfYptm5KeKlomT7BjkoMwPOvWA"
+          source: .output/public/*
+          target: /var/www/sakra-stex
