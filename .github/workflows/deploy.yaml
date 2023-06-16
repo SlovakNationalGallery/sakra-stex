@@ -16,7 +16,6 @@ jobs:
         uses: appleboy/scp-action@v0.1.4
         with:
           host: webumenia.sk
-          fingerprint: "2J8XrBxXtH+d+8RvvPfYptm5KeKlomT7BjkoMwPOvWA"
           username: lab_sng
           key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           source: .output/public/*
