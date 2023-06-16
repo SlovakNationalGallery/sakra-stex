@@ -1,4 +1,4 @@
-export default function (durationInSeconds: number, onTimeout: () => void) {
+export default function (durationInMs: number, onTimeout: () => void) {
   const timeout = ref();
 
   onMounted(() => {
@@ -11,7 +11,7 @@ export default function (durationInSeconds: number, onTimeout: () => void) {
 
   function startTimer() {
     clearTimer();
-    timeout.value = setTimeout(onTimeout, durationInSeconds * 1000);
+    timeout.value = setTimeout(onTimeout, durationInMs);
   }
 
   function clearTimer() {
