@@ -17,5 +17,7 @@ jobs:
         with:
           host: webumenia.sk
           fingerprint: "2J8XrBxXtH+d+8RvvPfYptm5KeKlomT7BjkoMwPOvWA"
+          username: lab_sng
+          key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           source: .output/public/*
           target: /var/www/sakra-stex
