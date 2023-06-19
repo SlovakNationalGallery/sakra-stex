@@ -18,5 +18,5 @@ module.exports = {
       body: ["Inter", ...defaultTheme.fontFamily.sans],
     },
   },
-  plugins: [],
+  plugins: [require("@tailwindcss/typography")],
 };
