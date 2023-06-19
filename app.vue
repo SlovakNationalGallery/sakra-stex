@@ -20,7 +20,7 @@ function onUpdate({ tour }: { tour?: Object }) {
         <Micrio
           :cancel-tour-after-ms="10000"
           :coordinates="showIntro ? [0.06, 0.5] : undefined"
-          id="NwEkJ"
+          id="aYdqm"
           v-slot="micrio"
           @update="onUpdate"
         >
