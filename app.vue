@@ -5,11 +5,11 @@ useHead({
 });
 
 const showIntro = ref(true);
-const showIntroTimer = useTimer(15000, () => (showIntro.value = true));
+const showIntroTimer = useTimer(25000, () => (showIntro.value = true));
 
 function onUpdate({ tour }: { tour?: Object }) {
   showIntro.value = false;
-  if (tour) showIntroTimer.reset();
+  if (tour) showIntroTimer.reset;
 }
 </script>
 
@@ -18,7 +18,7 @@ function onUpdate({ tour }: { tour?: Object }) {
     <div class="h-full w-full">
       <ClientOnly>
         <Micrio
-          :cancel-tour-after-ms="10000"
+          :cancel-tour-after-ms="20000"
           :coordinates="showIntro ? [0.06, 0.5] : undefined"
           id="aYdqm"
           v-slot="micrio"
