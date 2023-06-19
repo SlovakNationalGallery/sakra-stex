@@ -1,41 +1,6 @@
+@import "micrio.css";
 @import "sng-font.css";
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-micr-io .micrio-marker > button {
-  @apply w-4 h-4 bg-white rounded-full flex items-center justify-center border-none !important;
-  animation: pulse 2s infinite;
-}
-
-/* Increase button touch area */
-micr-io .micrio-marker > button::before {
-  content: "";
-  @apply absolute w-32 h-32 bg-transparent rounded-full !important;
-}
-
-micr-io .micrio-marker.opened > button {
-  @apply opacity-0 transition-opacity duration-1000 !important;
-}
-
-micr-io .micrio-tour {
-  display: none;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
-  }
-
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 1rem rgba(255, 255, 255, 0);
-  }
-
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
-  }
-}
