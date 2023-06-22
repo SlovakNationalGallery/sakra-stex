@@ -82,7 +82,7 @@ function onUpdate({ tour }: { tour?: Object }) {
         <h1
           class="text-white font-bold text-[4.5rem] drop-shadow-lg font-display"
         >
-          Záleží na detailoch
+          Na detailoch záleží
         </h1>
         <p class="text-white text-2xl mt-2 drop-shadow-sm">
           Nechajte sa vtiahnuť do detailov umeleckých diel
