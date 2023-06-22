@@ -1,10 +1,6 @@
 export default function (durationInMs: number, onTimeout: () => void) {
   const timeout = ref();
 
-  onMounted(() => {
-    startTimer();
-  });
-
   onUnmounted(() => {
     clearTimer();
   });
