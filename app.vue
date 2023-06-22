@@ -5,11 +5,16 @@ useHead({
 });
 
 const showIntro = ref(true);
-const showIntroTimer = useTimer(25000, () => (showIntro.value = true));
+// Show intro after timeout if no marker is selected
+const showIntroTimer = useTimer(5000, () => (showIntro.value = true));
 
-function onUpdate({ tour }: { tour?: Object }) {
-  showIntro.value = false;
-  if (tour) showIntroTimer.reset();
+function onUpdate({ marker }: { marker?: Object }) {
+  if (marker) {
+    showIntro.value = false;
+    showIntroTimer.cancel();
+  }
+
+  if (!marker) showIntroTimer.reset();
 }
 </script>
 
@@ -72,7 +77,7 @@ function onUpdate({ tour }: { tour?: Object }) {
       enter-to-class="opacity-100"
       enter-active-class="transition-all duration-[2000ms] delay-1000 ease-out"
       leave-from-class="opacity-100"
-      leave-to-class="opacity-0 translate-y-24"
+      leave-to-class="opacity-0 translate-y-full"
       leave-active-class="transition-all duration-500"
     >
       <div

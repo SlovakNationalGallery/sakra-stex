@@ -10,7 +10,7 @@ const emit = defineEmits(["update"]);
 
 const tourCancellationTimer = useTimer(props.cancelTourAfterMs ?? 0, () => {
   if (props.cancelTourAfterMs === undefined) return;
-  cancelTour();
+  if (tourRef.value) cancelTour();
 });
 
 useHead({
@@ -24,7 +24,7 @@ const tourRef = ref<
   | Models.ImageCultureData.MarkerTour
   | undefined
 >();
-const tourUnsubscribeRef = ref<() => void>();
+const markerRef = ref<Models.ImageCultureData.Marker>();
 
 onMounted(() => {
   const element = document.querySelector("micr-io")!;
@@ -45,20 +45,14 @@ onMounted(() => {
       micrio.camera.flyToCoo(props.coordinates);
     }
 
-    tourUnsubscribeRef.value = micrio.state.tour.subscribe((tourData) => {
-      tourRef.value = tourData;
-      tourCancellationTimer.reset();
+    // Subscribe refs to state changes to that we can watch them
+    micrio.state.tour.subscribe((tour) => {
+      tourRef.value = tour;
+    });
+    micrio.state.marker.subscribe((marker) => {
+      markerRef.value = marker;
     });
   });
-
-  element.addEventListener("update", (e) => {
-    tourCancellationTimer.reset();
-    emit("update", { tour: micrio?.state.$tour });
-  });
-});
-
-onUnmounted(() => {
-  tourUnsubscribeRef.value?.();
 });
 
 watch(
@@ -66,24 +60,25 @@ watch(
   (coordinates) => {
     const micrio = micrioRef.value;
     if (!micrio) return;
-    // Ignore coordinates if there's a marker selected
-    if (micrio.state.$marker) return;
 
-    if (coordinates) {
-      micrio.camera.flyToCoo(coordinates);
-      return;
-    }
+    // Ignore if there's a marker selected
+    if (markerRef.value) return;
 
-    if (coordinates === undefined) {
-      micrioRef.value?.camera.flyToFullView();
-      return;
-    }
+    coordinates
+      ? micrio.camera.flyToCoo(coordinates)
+      : micrio.camera.flyToFullView();
   }
 );
 
+watch(markerRef, (marker) => {
+  marker ? tourCancellationTimer.reset() : tourCancellationTimer.cancel();
+  emit("update", { marker });
+});
+
 function cancelTour() {
-  const micrio = micrioRef.value;
-  if (!micrio) return;
+  console.log("Cancelling tour due to inactivity");
+  const micrio = micrioRef.value!;
+
   micrio.state.tour.set(undefined);
 
   props.coordinates

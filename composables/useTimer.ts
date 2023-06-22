@@ -23,5 +23,9 @@ export default function (durationInMs: number, onTimeout: () => void) {
     startTimer();
   }
 
-  return { reset };
+  function cancel() {
+    clearTimer();
+  }
+
+  return { reset, cancel };
 }
