@@ -9,7 +9,7 @@ const showIntroTimer = useTimer(25000, () => (showIntro.value = true));
 
 function onUpdate({ tour }: { tour?: Object }) {
   showIntro.value = false;
-  if (tour) showIntroTimer.reset;
+  if (tour) showIntroTimer.reset();
 }
 </script>
 
@@ -84,7 +84,7 @@ function onUpdate({ tour }: { tour?: Object }) {
         >
           Na detailoch záleží
         </h1>
-        <p class="text-white text-2xl mt-2 drop-shadow-sm">
+        <p class="text-white text-2xl drop-shadow-sm">
           Nechajte sa vtiahnuť do detailov umeleckých diel
         </p>
       </div>
