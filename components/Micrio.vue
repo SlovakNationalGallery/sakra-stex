@@ -59,6 +59,7 @@ onMounted(() => {
 
     micrio.state.marker.subscribe((marker) => {
       if (marker) {
+        tourCancellationTimer.reset();
         emit("marker-open");
       }
     });
