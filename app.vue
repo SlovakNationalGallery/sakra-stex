@@ -4,13 +4,26 @@ useHead({
   meta: [{ name: "robots", content: "noindex" }],
 });
 
+const strings = {
+  sk: {
+    title: "Na detailoch záleží",
+    tagline: "Nechajte sa vtiahnuť do detailov umeleckých diel",
+  },
+  en: {
+    title: "Details matter",
+    tagline: "Immerse yourself in the details of artworks",
+  },
+};
+
 const tourRunning = ref(false);
 const showIntro = ref(true);
 const showLangSwitch = ref(true);
 
-const lang = ref("sk");
+const lang = ref<"en" | "sk">("sk");
 // Show intro after timeout if no marker is selected
-const showIntroTimer = useTimer(5000, () => (showIntro.value = true));
+const showIntroTimer = useTimer(5000, () => {
+  showIntro.value = true;
+});
 
 watch(tourRunning, (tourRunning) => {
   if (tourRunning) {
@@ -90,26 +103,6 @@ function onMicrioError() {
                 </div>
               </Transition>
             </div>
-
-            <!-- Lang switcher -->
-            <Transition
-              appear
-              enter-from-class="opacity-0 translate-y-12"
-              enter-to-class="opacity-100"
-              enter-active-class="transition-all duration-300 delay-200 ease-out"
-              leave-from-class="opacity-100"
-              leave-to-class="opacity-0 translate-y-12"
-              leave-active-class="transition-all duration-300"
-            >
-              <div v-if="showLangSwitch" class="hidden absolute top-0 right-0">
-                <button
-                  class="text-white font-display text-3xl uppercase p-12"
-                  @click="lang = lang === 'sk' ? 'en' : 'sk'"
-                >
-                  {{ lang }}
-                </button>
-              </div>
-            </Transition>
           </Micrio>
         </NuxtErrorBoundary>
       </ClientOnly>
@@ -129,14 +122,47 @@ function onMicrioError() {
         v-if="showIntro"
         class="absolute bottom-32 left-32 whitespace-nowrap"
       >
-        <h1
-          class="text-white font-bold text-[4.5rem] drop-shadow-lg font-display"
+        <Transition
+          appear
+          mode="out-in"
+          enter-from-class="opacity-0"
+          enter-to-class="opacity-100"
+          enter-active-class="transition-opacity duration-300 delay-300 ease-out"
+          leave-from-class="opacity-100"
+          leave-to-class="opacity-0"
+          leave-active-class="transition-opacity duration-300"
         >
-          Na detailoch záleží
-        </h1>
-        <p class="text-white text-2xl drop-shadow-sm">
-          Nechajte sa vtiahnuť do detailov umeleckých diel
-        </p>
+          <div :key="lang">
+            <h1
+              class="text-white font-bold text-[4.5rem] drop-shadow-lg font-display"
+            >
+              {{ strings[lang].title }}
+            </h1>
+            <p class="text-white text-2xl drop-shadow-sm">
+              {{ strings[lang].tagline }}
+            </p>
+          </div>
+        </Transition>
+      </div>
+    </Transition>
+
+    <!-- Lang switcher -->
+    <Transition
+      appear
+      enter-from-class="opacity-0 translate-y-12"
+      enter-to-class="opacity-100"
+      enter-active-class="transition-all duration-300 delay-200 ease-out"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0 translate-y-12"
+      leave-active-class="transition-all duration-300"
+    >
+      <div v-if="showLangSwitch" class="hidden absolute top-0 right-0">
+        <button
+          class="text-white font-display text-3xl uppercase p-12"
+          @click="lang = lang === 'sk' ? 'en' : 'sk'"
+        >
+          {{ lang }}
+        </button>
       </div>
     </Transition>
   </div>
