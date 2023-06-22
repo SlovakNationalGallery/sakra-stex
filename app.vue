@@ -8,7 +8,7 @@ const tourRunning = ref(false);
 const showIntro = ref(true);
 const showLangSwitch = ref(true);
 
-const lang = ref("en");
+const lang = ref("sk");
 // Show intro after timeout if no marker is selected
 const showIntroTimer = useTimer(5000, () => (showIntro.value = true));
 
