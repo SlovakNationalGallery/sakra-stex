@@ -6,6 +6,15 @@ micr-io .micrio-marker-popup {
   @apply font-body absolute;
   @apply transform-none right-16 top-16 left-auto !important;
 }
+
+micr-io .micrio-marker-popup.top-left {
+  @apply left-16 top-16 right-auto  !important;
+}
+
+micr-io .micrio-marker-popup.bottom-left {
+  @apply left-16 bottom-16 right-auto top-auto !important;
+}
+
 micr-io .micrio-marker-content > main {
   @apply py-6 px-8;
 }
