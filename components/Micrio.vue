@@ -40,6 +40,9 @@ onMounted(() => {
 
   element.addEventListener("show", (e: any) => {
     if (props.coordinates) {
+      // Ignore if there's a marker selected
+      if (micrio.state.$marker) return;
+
       micrio.camera.flyToCoo(props.coordinates);
     }
 
