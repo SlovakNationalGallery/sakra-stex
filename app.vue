@@ -7,11 +7,11 @@ useHead({
 const strings = {
   sk: {
     title: "Na detailoch záleží",
-    tagline: "Nechajte sa vtiahnuť do detailov umeleckých diel",
+    tagline: "Preskúmajte reliéf Adorácie Ježiša zblízka",
   },
   en: {
     title: "Details matter",
-    tagline: "Immerse yourself in the details of artworks",
+    tagline: "Explore the relief of the Adoration of Jesus up close",
   },
 };
 
