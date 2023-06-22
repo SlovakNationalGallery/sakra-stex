@@ -5,6 +5,7 @@ const props = defineProps<{
   id: string;
   cancelTourAfterMs?: number;
   coordinates?: Coords;
+  lang: string;
 }>();
 const emit = defineEmits(["marker-open", "tour-stop", "tour-started"]);
 
@@ -76,6 +77,20 @@ watch(
   }
 );
 
+watch(
+  () => props.lang,
+  (lang) => {
+    const micrio = micrioRef.value;
+    if (!micrio) return;
+
+    const oldView = micrio.camera.getView()!;
+    micrioRef.value?.$current.lang.set(lang);
+
+    // Restore view
+    micrio.camera.jumpToView(oldView, 0);
+  }
+);
+
 function cancelTour() {
   const micrio = micrioRef.value!;
 
@@ -107,6 +122,7 @@ function changeStepBy(delta: number) {
   <!-- https://kb.micr.io/for-developers/custom-options-for-the-micr-io-element -->
   <micr-io
     :id="id"
+    :lang="lang"
     camspeed="3"
     controls="false"
     logo="false"

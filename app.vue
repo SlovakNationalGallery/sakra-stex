@@ -6,6 +6,9 @@ useHead({
 
 const tourRunning = ref(false);
 const showIntro = ref(true);
+const showLangSwitch = ref(true);
+
+const lang = ref("en"); // TODO SK
 // Show intro after timeout if no marker is selected
 const showIntroTimer = useTimer(5000, () => (showIntro.value = true));
 
@@ -23,6 +26,12 @@ watch(tourRunning, (tourRunning) => {
 // so we use marker-open as a proxy event
 function onMarkerOpen() {
   showIntro.value = false;
+  showLangSwitch.value = false;
+}
+
+function onTourStop() {
+  tourRunning.value = false;
+  showLangSwitch.value = true;
 }
 </script>
 
@@ -31,13 +40,14 @@ function onMarkerOpen() {
     <div class="h-full w-full">
       <ClientOnly>
         <Micrio
-          :cancel-tour-after-ms="20000"
-          :coordinates="showIntro ? [0.06, 0.5] : undefined"
           id="aYdqm"
+          :cancel-tour-after-ms="20000"
+          :lang="lang"
+          :coordinates="showIntro ? [0.06, 0.5] : undefined"
           v-slot="micrio"
           @marker-open="onMarkerOpen"
           @tour-started="tourRunning = true"
-          @tour-stop="tourRunning = false"
+          @tour-stop="onTourStop"
         >
           <!-- Controls -->
           <div
@@ -76,6 +86,26 @@ function onMarkerOpen() {
               </div>
             </Transition>
           </div>
+
+          <!-- Lang switcher -->
+          <Transition
+            appear
+            enter-from-class="opacity-0 translate-y-12"
+            enter-to-class="opacity-100"
+            enter-active-class="transition-all duration-300 delay-200 ease-out"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0 translate-y-12"
+            leave-active-class="transition-all duration-300"
+          >
+            <div v-if="showLangSwitch" class="hidden absolute top-0 right-0">
+              <button
+                class="text-white font-display text-3xl uppercase p-12"
+                @click="lang = lang === 'sk' ? 'en' : 'sk'"
+              >
+                {{ lang }}
+              </button>
+            </div>
+          </Transition>
         </Micrio>
       </ClientOnly>
     </div>
