@@ -10,7 +10,10 @@ const emit = defineEmits(["update"]);
 
 const tourCancellationTimer = useTimer(props.cancelTourAfterMs ?? 0, () => {
   if (props.cancelTourAfterMs === undefined) return;
-  if (tourRef.value) cancelTour();
+  if (tourRef.value) {
+    console.log("Cancelling tour due to inactivity");
+    cancelTour();
+  }
 });
 
 useHead({
@@ -76,7 +79,6 @@ watch(markerRef, (marker) => {
 });
 
 function cancelTour() {
-  console.log("Cancelling tour due to inactivity");
   const micrio = micrioRef.value!;
 
   micrio.state.tour.set(undefined);
