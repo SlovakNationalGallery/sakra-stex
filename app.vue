@@ -156,7 +156,7 @@ function onMicrioError() {
       leave-to-class="opacity-0 translate-y-12"
       leave-active-class="transition-all duration-300"
     >
-      <div v-if="showLangSwitch" class="hidden absolute top-0 right-0">
+      <div v-if="showLangSwitch" class="absolute top-0 right-0">
         <button
           class="text-white font-display text-3xl uppercase p-12"
           @click="lang = lang === 'sk' ? 'en' : 'sk'"
