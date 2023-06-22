@@ -31,6 +31,9 @@ onMounted(() => {
 
   micrio.defaultSettings = {
     noZoom: true,
+    hookDrag: false,
+    hookPinch: false,
+    freeMove: false,
     _markers: {
       noTitles: true,
       autoStartTour: true,
@@ -132,6 +135,7 @@ function changeStepBy(delta: number) {
     logo="false"
     toolbar="false"
     minimap="false"
+    class="touch-events-none"
   />
   <slot
     :cancelTour="cancelTour"
