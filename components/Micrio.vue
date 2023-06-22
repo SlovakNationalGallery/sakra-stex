@@ -6,11 +6,11 @@ const props = defineProps<{
   cancelTourAfterMs?: number;
   coordinates?: Coords;
 }>();
-const emit = defineEmits(["update"]);
+const emit = defineEmits(["marker-open", "tour-stop", "tour-started"]);
 
 const tourCancellationTimer = useTimer(props.cancelTourAfterMs ?? 0, () => {
   if (props.cancelTourAfterMs === undefined) return;
-  if (tourRef.value) {
+  if (micrioRef.value?.state.$tour) {
     console.log("Cancelling tour due to inactivity");
     cancelTour();
   }
@@ -22,12 +22,6 @@ useHead({
 });
 
 const micrioRef = ref<HTMLMicrioElement>();
-const tourRef = ref<
-  | Models.ImageCultureData.VideoTour
-  | Models.ImageCultureData.MarkerTour
-  | undefined
->();
-const markerRef = ref<Models.ImageCultureData.Marker>();
 
 onMounted(() => {
   const element = document.querySelector("micr-io")!;
@@ -48,12 +42,21 @@ onMounted(() => {
       micrio.camera.flyToCoo(props.coordinates);
     }
 
-    // Subscribe refs to state changes to that we can watch them
     micrio.state.tour.subscribe((tour) => {
-      tourRef.value = tour;
+      if (tour) {
+        emit("tour-started");
+        tourCancellationTimer.reset();
+        return;
+      }
+
+      emit("tour-stop");
+      tourCancellationTimer.cancel();
     });
+
     micrio.state.marker.subscribe((marker) => {
-      markerRef.value = marker;
+      if (marker) {
+        emit("marker-open");
+      }
     });
   });
 });
@@ -65,18 +68,13 @@ watch(
     if (!micrio) return;
 
     // Ignore if there's a marker selected
-    if (markerRef.value) return;
+    if (micrio.state.$marker) return;
 
     coordinates
       ? micrio.camera.flyToCoo(coordinates)
       : micrio.camera.flyToFullView();
   }
 );
-
-watch(markerRef, (marker) => {
-  marker ? tourCancellationTimer.reset() : tourCancellationTimer.cancel();
-  emit("update", { marker });
-});
 
 function cancelTour() {
   const micrio = micrioRef.value!;
@@ -116,7 +114,6 @@ function changeStepBy(delta: number) {
     minimap="false"
   />
   <slot
-    :tour="tourRef"
     :cancelTour="cancelTour"
     :nextMarker="() => changeStepBy(1)"
     :previousMarker="() => changeStepBy(-1)"

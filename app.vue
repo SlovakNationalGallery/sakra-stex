@@ -4,17 +4,25 @@ useHead({
   meta: [{ name: "robots", content: "noindex" }],
 });
 
+const tourRunning = ref(false);
 const showIntro = ref(true);
 // Show intro after timeout if no marker is selected
 const showIntroTimer = useTimer(5000, () => (showIntro.value = true));
 
-function onUpdate({ marker }: { marker?: Object }) {
-  if (marker) {
+watch(tourRunning, (tourRunning) => {
+  if (tourRunning) {
     showIntro.value = false;
     showIntroTimer.cancel();
+    return;
   }
 
-  if (!marker) showIntroTimer.reset();
+  showIntroTimer.reset();
+});
+
+// Micrio only emits tour-started when the camera has settled
+// so we use marker-open as a proxy event
+function onMarkerOpen() {
+  showIntro.value = false;
 }
 </script>
 
@@ -27,22 +35,24 @@ function onUpdate({ marker }: { marker?: Object }) {
           :coordinates="showIntro ? [0.06, 0.5] : undefined"
           id="aYdqm"
           v-slot="micrio"
-          @update="onUpdate"
+          @marker-open="onMarkerOpen"
+          @tour-started="tourRunning = true"
+          @tour-stop="tourRunning = false"
         >
           <!-- Controls -->
           <div
             class="absolute inset-x-0 bottom-0 flex justify-end p-16 pointer-events-none overflow-hidden"
           >
             <Transition
-              enter-from-class="opacity-0 translate-y-24"
+              enter-from-class="opacity-0"
               enter-to-class="opacity-100"
-              enter-active-class="transition-all duration-500 ease-out"
+              enter-active-class="transition-all duration-200 ease-out"
               leave-from-class="opacity-100"
-              leave-to-class="opacity-0 translate-y-24"
-              leave-active-class="transition-all duration-500 ease-in"
+              leave-to-class="opacity-0"
+              leave-active-class="transition-all duration-100 ease-in"
             >
               <div
-                v-if="micrio.tour"
+                v-if="tourRunning"
                 class="p-4 bg-white grid grid-cols-3 rounded-[5rem] gap-4 pointer-events-auto drop-shadow-lg shadow-black/70"
               >
                 <button
