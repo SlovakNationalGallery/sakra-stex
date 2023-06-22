@@ -19,7 +19,11 @@ watch(tourRunning, (tourRunning) => {
     return;
   }
 
-  showIntroTimer.reset();
+  if (!tourRunning) {
+    showIntroTimer.reset();
+    showLangSwitch.value = true;
+    return;
+  }
 });
 
 // Micrio only emits tour-started when the camera has settled
@@ -27,11 +31,6 @@ watch(tourRunning, (tourRunning) => {
 function onMarkerOpen() {
   showIntro.value = false;
   showLangSwitch.value = false;
-}
-
-function onTourStop() {
-  tourRunning.value = false;
-  showLangSwitch.value = true;
 }
 </script>
 
@@ -47,7 +46,7 @@ function onTourStop() {
           v-slot="micrio"
           @marker-open="onMarkerOpen"
           @tour-started="tourRunning = true"
-          @tour-stop="onTourStop"
+          @tour-stop="tourRunning = false"
         >
           <!-- Controls -->
           <div
