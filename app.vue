@@ -7,7 +7,7 @@ useHead({
 const strings = {
   sk: {
     title: "Na detailoch záleží",
-    tagline: "Preskúmajte reliéf Adorácie Ježiša zblízka.",
+    tagline: "Preskúmajte reliéf Adorácie Ježiša zblízka",
   },
   en: {
     title: "Details matter",
