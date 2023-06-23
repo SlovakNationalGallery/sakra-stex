@@ -57,7 +57,7 @@ function onMicrioError() {
 </script>
 
 <template>
-  <div class="bg-black absolute inset-0 overflow-hidden font-body">
+  <div class="bg-black absolute inset-0 overflow-hidden font-body select-none">
     <div class="h-full w-full">
       <ClientOnly>
         <NuxtErrorBoundary @error="onMicrioError">
