@@ -25,6 +25,11 @@ const showIntroTimer = useTimer(5000, () => {
   showIntro.value = true;
 });
 
+onMounted(() => {
+  //Prevent right-click actions
+  document.addEventListener("contextmenu", (e) => e.preventDefault());
+});
+
 watch(tourRunning, (tourRunning) => {
   if (tourRunning) {
     showIntro.value = false;
