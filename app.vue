@@ -63,7 +63,7 @@ function onMicrioError() {
         <NuxtErrorBoundary @error="onMicrioError">
           <Micrio
             id="aYdqm"
-            :cancel-tour-after-ms="20000"
+            :cancel-tour-after-ms="60000"
             :lang="lang"
             :coordinates="showIntro ? [0.06, 0.5] : undefined"
             v-slot="micrio"
