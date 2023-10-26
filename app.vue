@@ -84,27 +84,26 @@ function onMicrioError() {
                 leave-active-class="transition-all duration-100 ease-in"
               >
                 <div
-                  v-if="tourRunning"
-                  class="p-4 bg-white grid grid-cols-3 rounded-[5rem] gap-4 pointer-events-auto drop-shadow-lg shadow-black/70"
+                  v-if="micrio.markerRef && !micrio.isPopoverHidden && (micrio.currentStepIndex || micrio.currentStepIndex === 0)"
+                  class="p-6 bg-white rounded-xl border-2 border-black w-[32rem]"
                 >
-                  <button
-                    class="w-14 h-14 bg-black/5 active:bg-black/10 flex items-center justify-center rounded-full"
-                    @click="micrio.cancelTour"
+                  <div
+                    class="flex gap-4 pointer-events-auto items-center justify-between pb-5 pt-2"
                   >
-                    <img src="~/assets/img/x-mark.svg" />
-                  </button>
-                  <button
-                    class="w-14 h-14 bg-black/5 active:bg-black/10 flex items-center justify-center rounded-full"
-                    @click="micrio.previousMarker"
-                  >
-                    <img src="~/assets/img/arrow-left.svg" />
-                  </button>
-                  <button
-                    class="w-14 h-14 bg-black/5 active:bg-black/10 flex items-center justify-center rounded-full"
-                    @click="micrio.nextMarker"
-                  >
-                    <img src="~/assets/img/arrow-left.svg" class="rotate-180" />
-                  </button>
+                    <button @click="micrio.previousMarker">
+                      <img src="~/assets/img/arrow-left.svg" />
+                    </button>
+                    <div class="text-2xl font-bold">
+                        <span>{{ micrio.currentStepIndex + 1 }}.</span> <span>{{ micrio.markerRef.title }}</span> 
+                    </div>
+                    <button @click="micrio.nextMarker">
+                      <img
+                        src="~/assets/img/arrow-left.svg"
+                        class="rotate-180"
+                      />
+                    </button>
+                  </div>
+                  <div v-html="micrio.markerRef.body" class="text-xl"/>
                 </div>
               </Transition>
             </div>
