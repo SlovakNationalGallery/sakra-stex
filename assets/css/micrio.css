@@ -4,7 +4,7 @@ micr-io .micrio-marker-popup {
 }
 /* Markers */
 micr-io .micrio-marker > button {
-  @apply w-12 h-12 text-3xl flex items-center justify-center border-none !important;
+  @apply w-16 h-16 text-3xl flex items-center justify-center border-none !important;
   animation: pulse 2s infinite;
 }
 

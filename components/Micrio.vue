@@ -26,22 +26,26 @@ const micrioRef = ref<HTMLMicrioElement>();
 const markerRef = ref<Models.ImageCultureData.Marker>();
 const isPopoverHidden = ref<Boolean>(false);
 const previousMarkerId = ref<String>();
-const tourSteps = ref<Array<string>>();
 
-const currentStepIndex = computed(() => {
-  if (!tourSteps.value || !markerRef.value) return;
-  return tourSteps.value.indexOf(markerRef.value.id);
+const currentMarker = computed(() => {
+  const tour = micrioRef.value?.state
+    .$tour as Models.ImageCultureData.MarkerTour;
+  const tourSteps = tour.steps;
+  if (!tourSteps || !markerRef.value) return;
+  return {
+    ...markerRef.value,
+    currentStepIndex: tourSteps.indexOf(markerRef.value.id),
+  };
 });
-
 const handleTouchMove = (e) => {
   isPopoverHidden.value = true;
   const micrio = micrioRef.value;
-  const currentlySelectedId = micrio?.state.$marker.id
-  if (!currentlySelectedId) return
+  const currentlySelectedId = micrio?.state.$marker.id;
+  if (!currentlySelectedId) return;
   const marker = document.getElementById(currentlySelectedId);
-  if (!marker) return
-  marker.parentElement?.classList.remove("opened")
-  }
+  if (!marker) return;
+  marker.parentElement?.classList.remove("opened");
+};
 
 onMounted(() => {
   const element = document.querySelector("micr-io")!;
@@ -58,10 +62,10 @@ onMounted(() => {
 
   element.addEventListener("show", (e: any) => {
     const markerTour = micrio.$current.$data.markerTours![0].steps;
-    const markersRef = document.querySelectorAll("button.micrio-marker");
+    const markers = document.querySelectorAll("button.micrio-marker");
 
-    markersRef.forEach((e) => {
-      e.innerHTML = markerTour.indexOf(e.id).toString();
+    markers.forEach((e) => {
+      e.innerHTML = (markerTour.indexOf(e.id) + 1).toString();
     });
 
     if (props.coordinates) {
@@ -73,14 +77,6 @@ onMounted(() => {
 
     micrio.state.tour.subscribe((tour) => {
       if (tour) {
-        const markerTour = tour as
-          | Models.ImageCultureData.MarkerTour
-          | undefined;
-
-        if (markerTour) {
-          tourSteps.value = markerTour.steps;
-        }
-
         emit("tour-started");
         tourCancellationTimer.reset();
         return;
@@ -91,7 +87,7 @@ onMounted(() => {
     });
 
     if (micrio.state.marker) {
-      markersRef.forEach((element) => {
+      markers.forEach((element) => {
         element.addEventListener("click", (e: any) => {
           if (micrio.state.$marker.id === e.target.id) {
             if (
@@ -99,9 +95,9 @@ onMounted(() => {
               isPopoverHidden.value === false
             ) {
               isPopoverHidden.value = true;
-              e.target.parentElement.classList.remove("opened")
+              e.target.parentElement.classList.remove("opened");
             } else {
-              e.target.parentElement.classList.add("opened")
+              e.target.parentElement.classList.add("opened");
               isPopoverHidden.value = false;
             }
             previousMarkerId.value = e.target.id;
@@ -178,10 +174,7 @@ function changeStepBy(delta: number) {
 
 <template>
   <!-- https://kb.micr.io/for-developers/custom-options-for-the-micr-io-element -->
-  <div
-    class="h-full"
-    @touchmove="handleTouchMove"
-  >
+  <div class="h-full" @touchmove="handleTouchMove">
     <micr-io
       :id="id"
       :lang="lang"
@@ -197,7 +190,6 @@ function changeStepBy(delta: number) {
     :nextMarker="() => changeStepBy(1)"
     :previousMarker="() => changeStepBy(-1)"
     :isPopoverHidden="isPopoverHidden"
-    :markerRef="markerRef"
-    :currentStepIndex="currentStepIndex"
+    :currentMarker="currentMarker"
   ></slot>
 </template>

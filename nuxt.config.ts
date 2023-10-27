@@ -13,11 +13,4 @@ export default defineNuxtConfig({
       isCustomElement: (tag) => tag === "micr-io",
     },
   },
-  modules: ["@nuxtjs/google-fonts"],
-  googleFonts: {
-    families: {
-      Inter: true,
-    },
-    download: true,
-  },
 });
