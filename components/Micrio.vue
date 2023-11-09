@@ -24,18 +24,21 @@ useHead({
 
 const micrioRef = ref<HTMLMicrioElement>();
 const markerRef = ref<Models.ImageCultureData.Marker>();
-const tourRef = ref<Models.ImageCultureData.MarkerTour | Models.ImageCultureData.VideoTour>();
+const tourRef = ref<
+  Models.ImageCultureData.MarkerTour | Models.ImageCultureData.VideoTour
+>();
 const isPopoverHidden = ref<Boolean>(false);
 const previousMarkerId = ref<String>();
 
-const handleTouchMove = (e) => {
+const handleTouchMove = () => {
   isPopoverHidden.value = true;
   const micrio = micrioRef.value;
-  const currentlySelectedId = micrio?.state.$marker.id;
+  if (!(micrio && micrio.state.$marker)) return;
+  const currentlySelectedId = micrio.state.$marker.id;
   if (!currentlySelectedId) return;
   const marker = document.getElementById(currentlySelectedId);
   if (!marker) return;
-  marker.parentElement?.classList.remove("opened");
+  marker.parentElement!.classList.remove("opened");
 };
 
 onMounted(() => {
@@ -56,7 +59,7 @@ onMounted(() => {
     const markers = document.querySelectorAll("button.micrio-marker");
 
     markers.forEach((e) => {
-      e.innerHTML = (markerTour.indexOf(e.id) + 1).toString();
+      e.innerHTML = `<div>${(markerTour.indexOf(e.id) + 1).toString()}</div>`;
     });
 
     if (props.coordinates) {
@@ -67,7 +70,7 @@ onMounted(() => {
     }
 
     micrio.state.tour.subscribe((tour) => {
-      tourRef.value = tour
+      tourRef.value = tour;
       if (tour) {
         emit("tour-started");
         tourCancellationTimer.reset();
@@ -80,19 +83,19 @@ onMounted(() => {
 
     if (micrio.state.marker) {
       markers.forEach((element) => {
-        element.addEventListener("click", (e: any) => {
-          if (micrio.state.$marker.id === e.target.id) {
+        element.addEventListener("click", () => {
+          if (micrio.state.$marker.id === element.id) {
             if (
-              previousMarkerId.value === e.target.id &&
+              previousMarkerId.value === element.id &&
               isPopoverHidden.value === false
             ) {
               isPopoverHidden.value = true;
-              e.target.parentElement.classList.remove("opened");
+              element.parentElement!.classList.remove("opened");
             } else {
-              e.target.parentElement.classList.add("opened");
+              element.parentElement!.classList.add("opened");
               isPopoverHidden.value = false;
             }
-            previousMarkerId.value = e.target.id;
+            previousMarkerId.value = element.id;
           }
         });
       });
@@ -148,9 +151,9 @@ function cancelTour() {
 }
 
 function changeStepBy(delta: number) {
-  const tour = micrioRef.value?.state.$tour
-  if (!tour) return
-  if (!('goto' in tour && tour.goto)) return
+  const tour = micrioRef.value?.state.$tour;
+  if (!tour) return;
+  if (!("goto" in tour && tour.goto)) return;
 
   if (delta > 0) {
     tour.goto((tour.currentStep! + delta) % tour.steps.length);
