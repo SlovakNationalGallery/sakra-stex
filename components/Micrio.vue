@@ -24,19 +24,10 @@ useHead({
 
 const micrioRef = ref<HTMLMicrioElement>();
 const markerRef = ref<Models.ImageCultureData.Marker>();
+const tourRef = ref<Models.ImageCultureData.MarkerTour | Models.ImageCultureData.VideoTour>();
 const isPopoverHidden = ref<Boolean>(false);
 const previousMarkerId = ref<String>();
 
-const currentMarker = computed(() => {
-  const tour = micrioRef.value?.state
-    .$tour as Models.ImageCultureData.MarkerTour;
-  const tourSteps = tour.steps;
-  if (!tourSteps || !markerRef.value) return;
-  return {
-    ...markerRef.value,
-    currentStepIndex: tourSteps.indexOf(markerRef.value.id),
-  };
-});
 const handleTouchMove = (e) => {
   isPopoverHidden.value = true;
   const micrio = micrioRef.value;
@@ -76,6 +67,7 @@ onMounted(() => {
     }
 
     micrio.state.tour.subscribe((tour) => {
+      tourRef.value = tour
       if (tour) {
         emit("tour-started");
         tourCancellationTimer.reset();
@@ -107,7 +99,7 @@ onMounted(() => {
     }
 
     micrio.state.marker.subscribe((marker) => {
-      markerRef.value = micrio.state.$marker;
+      markerRef.value = marker;
       if (marker) {
         tourCancellationTimer.reset();
         emit("marker-open");
@@ -156,10 +148,9 @@ function cancelTour() {
 }
 
 function changeStepBy(delta: number) {
-  const tour = micrioRef.value?.state.$tour as
-    | Models.ImageCultureData.MarkerTour
-    | undefined;
-  if (tour?.goto === undefined) return;
+  const tour = micrioRef.value?.state.$tour
+  if (!tour) return
+  if (!('goto' in tour && tour.goto)) return
 
   if (delta > 0) {
     tour.goto((tour.currentStep! + delta) % tour.steps.length);
@@ -190,6 +181,7 @@ function changeStepBy(delta: number) {
     :nextMarker="() => changeStepBy(1)"
     :previousMarker="() => changeStepBy(-1)"
     :isPopoverHidden="isPopoverHidden"
-    :currentMarker="currentMarker"
+    :markerRef="markerRef"
+    :tourRef="tourRef"
   ></slot>
 </template>

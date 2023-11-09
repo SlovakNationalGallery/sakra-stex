@@ -85,9 +85,11 @@ function onMicrioError() {
               >
                 <div
                   v-if="
-                    micrio.currentMarker &&
+                    micrio.markerRef &&
                     !micrio.isPopoverHidden &&
-                    (micrio.currentMarker.currentStepIndex || micrio.currentMarker.currentStepIndex === 0)
+                    micrio.tourRef &&
+                    'currentStep' in micrio.tourRef &&
+                    micrio.tourRef.currentStep !== undefined
                   "
                   class="p-6 bg-white rounded-xl border-2 border-black w-[32rem]"
                 >
@@ -98,8 +100,8 @@ function onMicrioError() {
                       <img src="~/assets/img/arrow-left.svg" />
                     </button>
                     <div class="text-2xl font-bold">
-                      <span>{{ micrio.currentMarker.currentStepIndex + 1 }}.</span>
-                      <span>{{ micrio.currentMarker.title }}</span>
+                      <span>{{ micrio.tourRef.currentStep + 1 }}. </span>
+                      <span>{{ micrio.markerRef.title }}</span>
                     </div>
                     <button @click="micrio.nextMarker">
                       <img
@@ -108,7 +110,7 @@ function onMicrioError() {
                       />
                     </button>
                   </div>
-                  <div v-html="micrio.currentMarker.body" class="text-xl" />
+                  <div v-html="micrio.markerRef.body" class="text-xl" />
                 </div>
               </Transition>
             </div>
