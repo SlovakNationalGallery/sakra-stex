@@ -1,16 +1,22 @@
 <script setup lang="ts">
 import type { Coords, HTMLMicrioElement, Models } from "Micrio";
 
+export type Tour =
+  | Models.ImageCultureData.MarkerTour
+  | Models.ImageCultureData.VideoTour;
+
 const props = defineProps<{
   id: string;
   cancelTourAfterMs?: number;
   coordinates?: Coords;
   lang: string;
+  tour?: Tour;
 }>();
 const emit = defineEmits([
   "marker-open",
   "tour-stop",
   "tour-started",
+  "tour-update",
   "navigation",
 ]);
 
@@ -51,6 +57,8 @@ onMounted(() => {
     }
 
     micrio.state.tour.subscribe((tour) => {
+      emit("tour-update", tour);
+
       if (tour) {
         emit("tour-started");
         tourCancellationTimer.reset();
@@ -103,6 +111,13 @@ watch(
   }
 );
 
+watch(
+  () => props.tour,
+  (tour) => {
+    if (micrioRef.value?.state.$tour?.id === tour?.id) return;
+    micrioRef.value?.state.tour.set(tour);
+  }
+);
 function cancelTour() {
   const micrio = micrioRef.value!;
 
