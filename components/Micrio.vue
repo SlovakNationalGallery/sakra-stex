@@ -7,7 +7,12 @@ const props = defineProps<{
   coordinates?: Coords;
   lang: string;
 }>();
-const emit = defineEmits(["marker-open", "tour-stop", "tour-started"]);
+const emit = defineEmits([
+  "marker-open",
+  "tour-stop",
+  "tour-started",
+  "navigation",
+]);
 
 const tourCancellationTimer = useTimer(props.cancelTourAfterMs ?? 0, () => {
   if (props.cancelTourAfterMs === undefined) return;
@@ -30,10 +35,6 @@ onMounted(() => {
   const micrio = micrioRef.value;
 
   micrio.defaultSettings = {
-    noZoom: true,
-    hookDrag: false,
-    hookPinch: false,
-    freeMove: false,
     _markers: {
       noTitles: true,
       autoStartTour: true,
@@ -66,6 +67,10 @@ onMounted(() => {
         emit("marker-open");
       }
     });
+  });
+
+  element.addEventListener("update", () => {
+    if (micrio.events.isNavigating) emit("navigation");
   });
 });
 
