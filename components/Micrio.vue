@@ -1,32 +1,20 @@
 <script setup lang="ts">
-import type { Coords, HTMLMicrioElement, Models } from "Micrio";
+import type { HTMLMicrioElement, Models } from "Micrio";
 
-export type Tour =
-  | Models.ImageCultureData.MarkerTour
-  | Models.ImageCultureData.VideoTour;
+export type Micrio = {
+  Instance: ReturnType<typeof buildEmittedInstance>;
+};
 
 const props = defineProps<{
   id: string;
-  cancelTourAfterMs?: number;
-  coordinates?: Coords;
   lang: string;
-  tour?: Tour;
 }>();
-const emit = defineEmits([
-  "marker-open",
-  "tour-stop",
-  "tour-started",
-  "tour-update",
-  "navigation",
-]);
 
-const tourCancellationTimer = useTimer(props.cancelTourAfterMs ?? 0, () => {
-  if (props.cancelTourAfterMs === undefined) return;
-  if (micrioRef.value?.state.$tour) {
-    console.log("Cancelling tour due to inactivity");
-    cancelTour();
-  }
-});
+const emit = defineEmits<{
+  show: [micrio: Micrio["Instance"]];
+  update: [micrio: Micrio["Instance"]];
+  "marker-open": [void];
+}>();
 
 useHead({
   title: "Micrio",
@@ -35,13 +23,30 @@ useHead({
 
 const micrioRef = ref<HTMLMicrioElement>();
 
-function buildTourUpdatePayload(tour: Tour | undefined) {
-  if (!tour) return tour;
+function buildEmittedInstance(micrio: HTMLMicrioElement) {
+  const tour = (() => {
+    if (!micrio.state.$tour) return undefined;
+
+    // Specify currentStep explicitly, because Micrio is not showing it for some reason
+    const currentStep =
+      "currentStep" in micrio.state.$tour
+        ? micrio.state.$tour.currentStep
+        : undefined;
+
+    return {
+      ...micrio.state.$tour,
+      currentStep,
+      cancel: cancelTour,
+    };
+  })();
 
   return {
-    ...tour,
-    // Write out currentStep explicitly, because Micrio makes it hidden somehow
-    currentStep: "currentStep" in tour ? tour.currentStep : undefined,
+    camera: micrio.camera,
+    tour,
+    events: {
+      isNavigating: micrio.events.isNavigating,
+    },
+    marker: micrio.state.$marker,
   };
 }
 
@@ -59,57 +64,22 @@ onMounted(() => {
   };
 
   element.addEventListener("show", (e: any) => {
-    if (props.coordinates) {
-      // Ignore if there's a marker selected
-      if (micrio.state.$marker) return;
-
-      micrio.camera.flyToCoo(props.coordinates);
-    }
-
-    micrio.state.tour.subscribe((tour) => {
-      emit("tour-update", buildTourUpdatePayload(tour));
-      if (tour) {
-        emit("tour-started");
-        tourCancellationTimer.reset();
-        return;
-      }
-
-      emit("tour-stop");
-      tourCancellationTimer.cancel();
-    });
-
-    micrio.state.marker.subscribe((marker) => {
-      if (marker) {
-        tourCancellationTimer.reset();
-        emit("marker-open");
-      }
-    });
+    emit("show", buildEmittedInstance(e.detail as HTMLMicrioElement));
   });
 
+  // This emit is needed for the currentStep to update in time
   element.addEventListener("marker-opened", () => {
-    // Also emit tour-update here, because Micrio only calls it on tour start/stop
-    emit("tour-update", buildTourUpdatePayload(micrio.state.$tour));
+    emit("update", buildEmittedInstance(micrio));
+  });
+
+  element.addEventListener("marker-open", () => {
+    emit("marker-open");
   });
 
   element.addEventListener("update", () => {
-    if (micrio.events.isNavigating) emit("navigation");
+    emit("update", buildEmittedInstance(micrio));
   });
 });
-
-watch(
-  () => props.coordinates,
-  (coordinates) => {
-    const micrio = micrioRef.value;
-    if (!micrio) return;
-
-    // Ignore if there's a marker selected
-    if (micrio.state.$marker) return;
-
-    coordinates
-      ? micrio.camera.flyToCoo(coordinates)
-      : micrio.camera.flyToFullView();
-  }
-);
 
 watch(
   () => props.lang,
@@ -125,21 +95,8 @@ watch(
   }
 );
 
-watch(
-  () => props.tour,
-  (tour) => {
-    if (micrioRef.value?.state.$tour?.id === tour?.id) return;
-    micrioRef.value?.state.tour.set(tour);
-  }
-);
 function cancelTour() {
-  const micrio = micrioRef.value!;
-
-  micrio.state.tour.set(undefined);
-
-  props.coordinates
-    ? micrio.camera.flyToCoo(props.coordinates)
-    : micrio.camera.flyToFullView();
+  micrioRef.value?.state.tour.set(undefined);
 }
 
 function changeStepBy(delta: number) {
@@ -169,7 +126,6 @@ function changeStepBy(delta: number) {
     logo="false"
     toolbar="false"
     minimap="false"
-    class="touch-events-none"
   />
   <slot
     :cancelTour="cancelTour"
