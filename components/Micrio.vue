@@ -35,6 +35,16 @@ useHead({
 
 const micrioRef = ref<HTMLMicrioElement>();
 
+function buildTourUpdatePayload(tour: Tour | undefined) {
+  if (!tour) return tour;
+
+  return {
+    ...tour,
+    // Write out currentStep explicitly, because Micrio makes it hidden somehow
+    currentStep: "currentStep" in tour ? tour.currentStep : undefined,
+  };
+}
+
 onMounted(() => {
   const element = document.querySelector("micr-io")!;
   micrioRef.value = document.querySelector("micr-io") as HTMLMicrioElement;
@@ -57,8 +67,7 @@ onMounted(() => {
     }
 
     micrio.state.tour.subscribe((tour) => {
-      emit("tour-update", tour);
-
+      emit("tour-update", buildTourUpdatePayload(tour));
       if (tour) {
         emit("tour-started");
         tourCancellationTimer.reset();
@@ -75,6 +84,11 @@ onMounted(() => {
         emit("marker-open");
       }
     });
+  });
+
+  element.addEventListener("marker-opened", () => {
+    // Also emit tour-update here, because Micrio only calls it on tour start/stop
+    emit("tour-update", buildTourUpdatePayload(micrio.state.$tour));
   });
 
   element.addEventListener("update", () => {
