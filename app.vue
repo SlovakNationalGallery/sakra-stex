@@ -22,7 +22,7 @@ const micrio = ref<Micrio["Instance"]>();
 
 const lang = ref<"en" | "sk">("sk");
 
-const inactivityTimer = useTimer(5000, () => {
+const inactivityTimer = useTimer(60000, () => {
   micrio.value?.tour?.cancel();
   cameraPreset.value = "zoom-out";
   showIntroTimer.reset();
