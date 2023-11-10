@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { Micrio } from "./components/Micrio.vue";
+
 useHead({
   // Do not index for now
   meta: [{ name: "robots", content: "noindex" }],
@@ -15,14 +17,19 @@ const strings = {
   },
 };
 
-const tourRunning = ref(false);
-const showIntro = ref(true);
-const showLangSwitch = ref(true);
+const cameraPreset = ref<"intro" | "zoom-out" | null>(null);
+const micrio = ref<Micrio["Instance"]>();
 
 const lang = ref<"en" | "sk">("sk");
-// Show intro after timeout if no marker is selected
+
+const inactivityTimer = useTimer(5000, () => {
+  micrio.value?.tour?.cancel();
+  cameraPreset.value = "zoom-out";
+  showIntroTimer.reset();
+});
+// // Show intro after timeout if no marker is selected
 const showIntroTimer = useTimer(5000, () => {
-  showIntro.value = true;
+  cameraPreset.value = "intro";
 });
 
 onMounted(() => {
@@ -30,25 +37,50 @@ onMounted(() => {
   document.addEventListener("contextmenu", (e) => e.preventDefault());
 });
 
-watch(tourRunning, (tourRunning) => {
-  if (tourRunning) {
-    showIntro.value = false;
-    showIntroTimer.cancel();
-    return;
+watch(micrio, (micrio, oldMicrio) => {
+  if (!micrio) return;
+
+  // Initialization
+  if (!oldMicrio && micrio) {
+    cameraPreset.value = "intro";
   }
 
-  if (!tourRunning) {
-    showIntroTimer.reset();
-    showLangSwitch.value = true;
-    return;
+  // Reset camera on navigation
+  // if (micrio.events.isNavigating) {
+  //   cameraPreset.value = null;
+  // }
+
+  if (micrio.tour) {
+    cameraPreset.value = null;
   }
+
+  // Tour cancellation
+  if (!micrio.tour && oldMicrio?.marker && !micrio.marker) {
+    cameraPreset.value = "zoom-out";
+  }
+
+  inactivityTimer.reset();
+  showIntroTimer.cancel();
+});
+
+watch(cameraPreset, (preset) => {
+  if (preset === "intro") {
+    micrio.value?.camera.flyToCoo([0.06, 0.5]);
+  }
+
+  if (preset === "zoom-out") {
+    micrio.value?.camera.flyToFullView();
+  }
+});
+
+const showLangSwitch = computed(() => {
+  return cameraPreset.value === "intro" || cameraPreset.value === "zoom-out";
 });
 
 // Micrio only emits tour-started when the camera has settled
 // so we use marker-open as a proxy event
 function onMarkerOpen() {
-  showIntro.value = false;
-  showLangSwitch.value = false;
+  cameraPreset.value = null;
 }
 
 function onMicrioError() {
@@ -63,13 +95,11 @@ function onMicrioError() {
         <NuxtErrorBoundary @error="onMicrioError">
           <Micrio
             id="aYdqm"
-            :cancel-tour-after-ms="60000"
             :lang="lang"
-            :coordinates="showIntro ? [0.06, 0.5] : undefined"
-            v-slot="micrio"
+            v-slot="controls"
+            @show="micrio = $event"
+            @update="micrio = $event"
             @marker-open="onMarkerOpen"
-            @tour-started="tourRunning = true"
-            @tour-stop="tourRunning = false"
           >
             <!-- Controls -->
             <div
@@ -84,24 +114,25 @@ function onMicrioError() {
                 leave-active-class="transition-all duration-100 ease-in"
               >
                 <div
-                  v-if="tourRunning"
+                  v-if="micrio?.tour"
                   class="p-4 bg-white grid grid-cols-3 rounded-[5rem] gap-4 pointer-events-auto drop-shadow-lg shadow-black/70"
                 >
                   <button
                     class="w-14 h-14 bg-black/5 active:bg-black/10 flex items-center justify-center rounded-full"
-                    @click="micrio.cancelTour"
+                    @click="controls.cancelTour"
                   >
+                    <!-- {{ micrio.tour.currentStep }} -->
                     <img src="~/assets/img/x-mark.svg" />
                   </button>
                   <button
                     class="w-14 h-14 bg-black/5 active:bg-black/10 flex items-center justify-center rounded-full"
-                    @click="micrio.previousMarker"
+                    @click="controls.previousMarker"
                   >
                     <img src="~/assets/img/arrow-left.svg" />
                   </button>
                   <button
                     class="w-14 h-14 bg-black/5 active:bg-black/10 flex items-center justify-center rounded-full"
-                    @click="micrio.nextMarker"
+                    @click="controls.nextMarker"
                   >
                     <img src="~/assets/img/arrow-left.svg" class="rotate-180" />
                   </button>
@@ -124,7 +155,7 @@ function onMicrioError() {
       leave-active-class="transition-all duration-500"
     >
       <div
-        v-if="showIntro"
+        v-if="cameraPreset === 'intro'"
         class="absolute bottom-32 left-32 whitespace-nowrap"
       >
         <Transition
