@@ -98,9 +98,8 @@ function onMarkerOpen() {
   cameraPreset.value = null;
 }
 
-function onMicrioError(e) {
-  console.log(e);
-  //window.location.reload();
+function onMicrioError() {
+  window.location.reload();
 }
 </script>
 
