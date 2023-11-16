@@ -3,6 +3,7 @@ import type { HTMLMicrioElement, Models } from "Micrio";
 
 export type Micrio = {
   Instance: ReturnType<typeof buildEmittedInstance>;
+  Marker: Models.ImageCultureData.Marker;
 };
 
 const props = defineProps<{
@@ -14,6 +15,7 @@ const emit = defineEmits<{
   show: [micrio: Micrio["Instance"]];
   update: [micrio: Micrio["Instance"]];
   "marker-open": [void];
+  "marker-click": [marker: Micrio["Marker"]];
 }>();
 
 useHead({
@@ -60,12 +62,22 @@ onMounted(() => {
     _markers: {
       noTitles: true,
       autoStartTour: true,
-      zoomOutAfterClose: true,
+      zoomOutAfterClose: false,
     },
   };
 
   element.addEventListener("show", (e: any) => {
     emit("show", buildEmittedInstance(e.detail as HTMLMicrioElement));
+
+    document.querySelectorAll("button.micrio-marker").forEach((element) => {
+      element.addEventListener("click", () => {
+        const marker = micrio.$current.$data.markers!.find(
+          (m) => m.id === element.id
+        )!;
+
+        emit("marker-click", marker);
+      });
+    });
   });
 
   // This emit is needed for the currentStep to update in time
