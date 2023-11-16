@@ -46,7 +46,8 @@ function buildEmittedInstance(micrio: HTMLMicrioElement) {
     events: {
       isNavigating: micrio.events.isNavigating,
     },
-    marker: micrio.state.$marker,
+    marker: micrio.state?.$marker,
+    $current: micrio.$current,
   };
 }
 

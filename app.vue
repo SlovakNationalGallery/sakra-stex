@@ -37,6 +37,18 @@ onMounted(() => {
   document.addEventListener("contextmenu", (e) => e.preventDefault());
 });
 
+function onMicrioShow($event: Micrio["Instance"]) {
+  micrio.value = $event;
+  const markerTour = $event.$current.$data?.markerTours?.[0];
+  if (!markerTour) return;
+  const markers = document.querySelectorAll("button.micrio-marker");
+  markers.forEach((e) => {
+    e.innerHTML = `<div>${(
+      markerTour.steps!.indexOf(e.id) + 1
+    ).toString()}</div>`;
+  });
+}
+
 watch(micrio, (micrio, oldMicrio) => {
   if (!micrio) return;
 
@@ -46,17 +58,13 @@ watch(micrio, (micrio, oldMicrio) => {
   }
 
   // Reset camera on navigation
-  // if (micrio.events.isNavigating) {
-  //   cameraPreset.value = null;
-  // }
+  if (micrio.events.isNavigating) {
+    micrio.tour?.cancel();
+    return;
+  }
 
   if (micrio.tour) {
     cameraPreset.value = null;
-  }
-
-  // Tour cancellation
-  if (!micrio.tour && oldMicrio?.marker && !micrio.marker) {
-    cameraPreset.value = "zoom-out";
   }
 
   inactivityTimer.reset();
@@ -83,8 +91,9 @@ function onMarkerOpen() {
   cameraPreset.value = null;
 }
 
-function onMicrioError() {
-  window.location.reload();
+function onMicrioError(e) {
+  console.log(e);
+  //window.location.reload();
 }
 </script>
 
@@ -97,7 +106,7 @@ function onMicrioError() {
             id="aYdqm"
             :lang="lang"
             v-slot="controls"
-            @show="micrio = $event"
+            @show="onMicrioShow"
             @update="micrio = $event"
             @marker-open="onMarkerOpen"
           >
@@ -114,28 +123,27 @@ function onMicrioError() {
                 leave-active-class="transition-all duration-100 ease-in"
               >
                 <div
-                  v-if="micrio?.tour"
-                  class="p-4 bg-white grid grid-cols-3 rounded-[5rem] gap-4 pointer-events-auto drop-shadow-lg shadow-black/70"
+                  v-if="micrio?.tour && micrio.marker"
+                  class="p-6 bg-white rounded-xl border-2 border-black w-[32rem]"
                 >
-                  <button
-                    class="w-14 h-14 bg-black/5 active:bg-black/10 flex items-center justify-center rounded-full"
-                    @click="controls.cancelTour"
+                  <div
+                    class="flex gap-4 pointer-events-auto items-center justify-between pb-5 pt-2"
                   >
-                    <!-- {{ micrio.tour.currentStep }} -->
-                    <img src="~/assets/img/x-mark.svg" />
-                  </button>
-                  <button
-                    class="w-14 h-14 bg-black/5 active:bg-black/10 flex items-center justify-center rounded-full"
-                    @click="controls.previousMarker"
-                  >
-                    <img src="~/assets/img/arrow-left.svg" />
-                  </button>
-                  <button
-                    class="w-14 h-14 bg-black/5 active:bg-black/10 flex items-center justify-center rounded-full"
-                    @click="controls.nextMarker"
-                  >
-                    <img src="~/assets/img/arrow-left.svg" class="rotate-180" />
-                  </button>
+                    <button @click="controls.previousMarker">
+                      <img src="~/assets/img/arrow-left.svg" />
+                    </button>
+                    <div class="text-2xl font-bold">
+                      <span>{{ (micrio.tour.currentStep ?? 0) + 1 }}. </span>
+                      <span>{{ micrio.marker.title }}</span>
+                    </div>
+                    <button @click="controls.nextMarker">
+                      <img
+                        src="~/assets/img/arrow-left.svg"
+                        class="rotate-180"
+                      />
+                    </button>
+                  </div>
+                  <div v-html="micrio.marker.body" class="text-xl" />
                 </div>
               </Transition>
             </div>
