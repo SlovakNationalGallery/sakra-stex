@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { HTMLMicrioElement, Models } from "Micrio";
+import { HTMLMicrioElement, Models } from "Micrio";
 
 export type Micrio = {
   Instance: ReturnType<typeof buildEmittedInstance>;
@@ -23,7 +23,17 @@ useHead({
   script: [{ src: "https://b.micr.io/micrio-4.3.min.js" }],
 });
 
+const slots = defineSlots<{
+  marker(props: (typeof markers)["value"][number]): any;
+  controls(props: {
+    cancelTour: () => void;
+    nextMarker: () => void;
+    previousMarker: () => void;
+  }): any;
+}>();
+
 const micrioRef = shallowRef<HTMLMicrioElement>();
+const dataRef = shallowRef<HTMLMicrioElement["$current"]["$data"]>();
 
 function buildEmittedInstance(micrio: HTMLMicrioElement) {
   const tour = (() => {
@@ -53,6 +63,18 @@ function buildEmittedInstance(micrio: HTMLMicrioElement) {
   };
 }
 
+const markers = computed(() => {
+  const markers = dataRef.value?.markers ?? [];
+  const tours = dataRef.value?.markerTours ?? [];
+
+  return markers.map((marker) => ({
+    ...marker,
+    index: tours
+      .find((tour) => tour.steps.includes(marker.id))
+      ?.steps.indexOf(marker.id),
+  }));
+});
+
 onMounted(() => {
   const micrio = micrioRef.value;
   if (!micrio) return;
@@ -76,6 +98,10 @@ onMounted(() => {
 
         emit("marker-click", marker);
       });
+    });
+
+    micrio.$current.data.subscribe((data) => {
+      dataRef.value = data;
     });
   });
 
@@ -140,7 +166,11 @@ function changeStepBy(delta: number) {
     toolbar="false"
     minimap="false"
   />
+  <Teleport v-for="marker in markers" :to="`#m-${marker.id} > button`">
+    <slot name="marker" v-bind="marker"></slot>
+  </Teleport>
   <slot
+    name="controls"
     :cancelTour="cancelTour"
     :nextMarker="() => changeStepBy(1)"
     :previousMarker="() => changeStepBy(-1)"
