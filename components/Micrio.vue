@@ -23,7 +23,7 @@ useHead({
   script: [{ src: "https://b.micr.io/micrio-4.3.min.js" }],
 });
 
-const micrioRef = ref<HTMLMicrioElement>();
+const micrioRef = shallowRef<HTMLMicrioElement>();
 
 function buildEmittedInstance(micrio: HTMLMicrioElement) {
   const tour = (() => {
@@ -54,9 +54,8 @@ function buildEmittedInstance(micrio: HTMLMicrioElement) {
 }
 
 onMounted(() => {
-  const element = document.querySelector("micr-io")!;
-  micrioRef.value = document.querySelector("micr-io") as HTMLMicrioElement;
   const micrio = micrioRef.value;
+  if (!micrio) return;
 
   micrio.defaultSettings = {
     _markers: {
@@ -66,8 +65,8 @@ onMounted(() => {
     },
   };
 
-  element.addEventListener("show", (e: any) => {
-    emit("show", buildEmittedInstance(e.detail as HTMLMicrioElement));
+  micrio.addEventListener("show", () => {
+    emit("show", buildEmittedInstance(micrio));
 
     document.querySelectorAll("button.micrio-marker").forEach((element) => {
       element.addEventListener("click", () => {
@@ -81,15 +80,15 @@ onMounted(() => {
   });
 
   // This emit is needed for the currentStep to update in time
-  element.addEventListener("marker-opened", () => {
+  micrio.addEventListener("marker-opened", () => {
     emit("update", buildEmittedInstance(micrio));
   });
 
-  element.addEventListener("marker-open", () => {
+  micrio.addEventListener("marker-open", () => {
     emit("marker-open");
   });
 
-  element.addEventListener("update", () => {
+  micrio.addEventListener("update", () => {
     emit("update", buildEmittedInstance(micrio));
   });
 });
@@ -132,6 +131,7 @@ function changeStepBy(delta: number) {
 <template>
   <!-- https://kb.micr.io/for-developers/custom-options-for-the-micr-io-element -->
   <micr-io
+    ref="micrioRef"
     :id="id"
     :lang="lang"
     camspeed="3"
