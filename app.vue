@@ -111,7 +111,7 @@ function onMicrioError() {
             </template>
             <template #controls="controls">
               <div
-                class="absolute inset-x-0 bottom-0 flex justify-end p-16 pointer-events-none overflow-hidden"
+                class="pointer-events-none absolute inset-x-0 bottom-0 flex justify-end overflow-hidden p-16"
               >
                 <Transition
                   enter-from-class="opacity-0"
@@ -123,10 +123,10 @@ function onMicrioError() {
                 >
                   <div
                     v-if="micrio?.tour && micrio.marker"
-                    class="p-6 bg-white rounded-xl border-2 border-black w-[32rem]"
+                    class="w-[32rem] rounded-xl border-2 border-black bg-white p-6"
                   >
                     <div
-                      class="flex gap-4 pointer-events-auto items-center justify-between pb-5 pt-2"
+                      class="pointer-events-auto flex items-center justify-between gap-4 pb-5 pt-2"
                     >
                       <button @click="controls.previousMarker">
                         <img src="~/assets/img/arrow-left.svg" />
@@ -178,11 +178,11 @@ function onMicrioError() {
         >
           <div :key="lang">
             <h1
-              class="text-white font-bold text-[4.5rem] drop-shadow-lg font-display"
+              class="font-display text-[4.5rem] font-bold text-white drop-shadow-lg"
             >
               {{ strings[lang].title }}
             </h1>
-            <p class="text-white text-2xl drop-shadow-sm">
+            <p class="text-2xl text-white drop-shadow-sm">
               {{ strings[lang].tagline }}
             </p>
           </div>
@@ -200,9 +200,9 @@ function onMicrioError() {
       leave-to-class="opacity-0 translate-y-12"
       leave-active-class="transition-all duration-300"
     >
-      <div v-if="showLangSwitch" class="absolute top-0 right-0">
+      <div v-if="showLangSwitch" class="absolute right-0 top-0">
         <button
-          class="text-white font-display text-3xl uppercase p-12"
+          class="p-12 font-display text-3xl uppercase text-white"
           @click="lang = lang === 'sk' ? 'en' : 'sk'"
         >
           {{ lang }}
