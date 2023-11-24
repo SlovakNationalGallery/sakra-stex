@@ -105,7 +105,9 @@ function onMicrioError() {
             @marker-click="onMarkerClick"
           >
             <template #marker="marker">
-              {{ (marker.index ?? 0) + 1 }}
+              <div>
+                {{ (marker.index ?? 0) + 1 }}
+              </div>
             </template>
             <template #controls="controls">
               <div
