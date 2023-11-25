@@ -92,7 +92,7 @@ function onMicrioError() {
 </script>
 
 <template>
-  <div class="bg-black absolute inset-0 overflow-hidden font-body select-none">
+  <div class="absolute inset-0 select-none overflow-hidden bg-black font-body">
     <div class="h-full w-full">
       <ClientOnly>
         <NuxtErrorBoundary @error="onMicrioError">
@@ -105,9 +105,12 @@ function onMicrioError() {
             @marker-click="onMarkerClick"
           >
             <template #marker="marker">
-              <div>
+              <PulsatingMarker
+                class="visible absolute -left-1/2 -top-1/2 flex h-16 w-16 items-center justify-center"
+                :open="micrio?.marker?.id == marker.id"
+              >
                 {{ (marker.index ?? 0) + 1 }}
-              </div>
+              </PulsatingMarker>
             </template>
             <template #controls="controls">
               <div
