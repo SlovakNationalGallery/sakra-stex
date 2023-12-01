@@ -134,7 +134,7 @@ function onMicrioError() {
                       <button @click="controls.previousMarker">
                         <img src="~/assets/img/arrow-left.svg" />
                       </button>
-                      <div class="text-2xl font-bold">
+                      <div class="font-display text-2xl font-bold">
                         <span>{{ (micrio.tour.currentStep ?? 0) + 1 }}. </span>
                         <span>{{ micrio.marker.title }}</span>
                       </div>
