@@ -112,46 +112,58 @@ function onMicrioError() {
                 {{ (marker.index ?? 0) + 1 }}
               </PulsatingMarker>
             </template>
-            <template #controls="controls">
-              <div
-                class="pointer-events-none absolute inset-x-0 bottom-0 flex justify-end overflow-hidden p-16"
-              >
-                <Transition
-                  enter-from-class="opacity-0"
-                  enter-to-class="opacity-100"
-                  enter-active-class="transition-all duration-200 ease-out"
-                  leave-from-class="opacity-100"
-                  leave-to-class="opacity-0"
-                  leave-active-class="transition-all duration-100 ease-in"
-                >
-                  <div
-                    v-if="micrio?.tour && micrio.marker"
-                    class="w-[32rem] rounded-xl border-2 border-black bg-white p-6"
-                  >
-                    <div
-                      class="pointer-events-auto flex items-center justify-between gap-4 pb-5 pt-2"
-                    >
-                      <button @click="controls.previousMarker">
-                        <img src="~/assets/img/arrow-left.svg" />
-                      </button>
-                      <div class="font-display text-2xl font-bold">
-                        <span>{{ (micrio.tour.currentStep ?? 0) + 1 }}. </span>
-                        <span>{{ micrio.marker.title }}</span>
-                      </div>
-                      <button @click="controls.nextMarker">
-                        <img
-                          src="~/assets/img/arrow-left.svg"
-                          class="rotate-180"
-                        />
-                      </button>
-                    </div>
-                    <div v-html="micrio.marker.body" class="text-xl" />
-                  </div>
-                </Transition>
-              </div>
-            </template>
           </Micrio>
         </NuxtErrorBoundary>
+        <!-- Custom marker -->
+        <div
+          v-if="micrio?.marker"
+          class="pointer-events-none absolute inset-0 flex p-16"
+          :class="
+            (() => {
+              if (micrio.marker.class?.includes('top-left'))
+                return 'items-start justify-start';
+              if (micrio.marker.class?.includes('top-right'))
+                return 'items-start justify-end';
+              if (micrio.marker.class?.includes('bottom-right'))
+                return 'items-end justify-end';
+              if (micrio.marker.class?.includes('bottom-left'))
+                return 'items-end justify-start';
+
+              // default: top-right
+              return 'items-start justify-end';
+            })()
+          "
+        >
+          <Transition
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            enter-active-class="transition-all duration-200 ease-out"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+            leave-active-class="transition-all duration-100 ease-in"
+          >
+            <div
+              v-if="micrio?.tour && micrio.marker"
+              class="w-[32rem] rounded-xl border-2 border-black bg-white p-6"
+            >
+              <div
+                class="pointer-events-auto flex items-center justify-between gap-4 pb-5 pt-2"
+              >
+                <button @click="micrio.tour.controls.previous">
+                  <img src="~/assets/img/arrow-left.svg" />
+                </button>
+                <div class="font-display text-2xl font-bold">
+                  <span>{{ (micrio.tour.currentStep ?? 0) + 1 }}. </span>
+                  <span>{{ micrio.marker.title }}</span>
+                </div>
+                <button @click="micrio.tour.controls.next">
+                  <img src="~/assets/img/arrow-left.svg" class="rotate-180" />
+                </button>
+              </div>
+              <div v-html="micrio.marker.body" class="text-xl" />
+            </div>
+          </Transition>
+        </div>
       </ClientOnly>
     </div>
 

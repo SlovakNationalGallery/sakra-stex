@@ -49,6 +49,11 @@ function buildEmittedInstance(micrio: HTMLMicrioElement) {
       ...micrio.state.$tour,
       currentStep,
       cancel: cancelTour,
+      controls: {
+        cancel: cancelTour,
+        next: () => changeStepBy(1),
+        previous: () => changeStepBy(-1),
+      },
     };
   })();
 
@@ -169,10 +174,4 @@ function changeStepBy(delta: number) {
   <Teleport v-for="marker in markers" :to="`#m-${marker.id} > button`">
     <slot name="marker" v-bind="marker"></slot>
   </Teleport>
-  <slot
-    name="controls"
-    :cancelTour="cancelTour"
-    :nextMarker="() => changeStepBy(1)"
-    :previousMarker="() => changeStepBy(-1)"
-  ></slot>
 </template>
