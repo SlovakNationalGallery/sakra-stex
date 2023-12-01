@@ -3,7 +3,7 @@ micr-io .micrio-marker-popup {
   @apply hidden;
 }
 
-/* Hide markersarkers */
+/* Hide markers */
 micr-io .micrio-marker > button {
   @apply invisible;
 }

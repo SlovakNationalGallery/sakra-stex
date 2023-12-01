@@ -93,7 +93,7 @@ onMounted(() => {
     document.querySelectorAll("button.micrio-marker").forEach((element) => {
       element.addEventListener("click", () => {
         const marker = micrio.$current.$data.markers!.find(
-          (m) => m.id === element.id
+          (m) => m.id === element.id,
         )!;
 
         emit("marker-click", marker);
@@ -130,7 +130,7 @@ watch(
 
     // Restore view
     micrio.camera.jumpToView(oldView, 0);
-  }
+  },
 );
 
 function cancelTour() {
