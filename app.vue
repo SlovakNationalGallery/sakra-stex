@@ -59,12 +59,12 @@ watch(micrio, (micrio, oldMicrio) => {
   showIntroTimer.cancel();
 });
 
-function onMarkerClick(marker: Micrio["Marker"]) {
-  if (!micrio.value?.marker?.id) return;
-  if (micrio.value.marker.id === marker.id) {
-    micrio.value.tour!.cancel();
-  }
-}
+// function onMarkerClick(marker: Micrio["Marker"]) {
+//   if (!micrio.value?.marker?.id) return;
+//   if (micrio.value.marker.id === marker.id) {
+//     micrio.value.tour!.cancel();
+//   }
+// }
 
 watch(cameraPreset, (preset) => {
   if (preset === "intro") {
@@ -102,12 +102,16 @@ function onMicrioError() {
             @show="micrio = $event"
             @update="micrio = $event"
             @marker-open="onMarkerOpen"
-            @marker-click="onMarkerClick"
           >
             <template #marker="marker">
               <PulsatingMarker
                 class="visible absolute -left-1/2 -top-1/2 flex h-16 w-16 items-center justify-center"
-                :open="micrio?.marker?.id == marker.id"
+                @click.stop="
+                  micrio?.marker?.id === marker.id
+                    ? marker.close()
+                    : marker.open()
+                "
+                :open="micrio?.marker?.id === marker.id"
               >
                 {{ (marker.index ?? 0) + 1 }}
               </PulsatingMarker>

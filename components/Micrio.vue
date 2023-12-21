@@ -15,7 +15,6 @@ const emit = defineEmits<{
   show: [micrio: Micrio["Instance"]];
   update: [micrio: Micrio["Instance"]];
   "marker-open": [void];
-  "marker-click": [marker: Micrio["Marker"]];
 }>();
 
 useHead({
@@ -74,6 +73,10 @@ const markers = computed(() => {
 
   return markers.map((marker) => ({
     ...marker,
+    open: () => {
+      micrioRef.value?.$current.state.marker.set(marker);
+    },
+    close: () => micrioRef.value?.$current.state.marker.set(undefined as any),
     index: tours
       .find((tour) => tour.steps.includes(marker.id))
       ?.steps.indexOf(marker.id),
@@ -94,16 +97,6 @@ onMounted(() => {
 
   micrio.addEventListener("show", () => {
     emit("show", buildEmittedInstance(micrio));
-
-    document.querySelectorAll("button.micrio-marker").forEach((element) => {
-      element.addEventListener("click", () => {
-        const marker = micrio.$current.$data.markers!.find(
-          (m) => m.id === element.id,
-        )!;
-
-        emit("marker-click", marker);
-      });
-    });
 
     micrio.$current.data.subscribe((data) => {
       dataRef.value = data;
