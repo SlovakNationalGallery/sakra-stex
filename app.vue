@@ -59,13 +59,6 @@ watch(micrio, (micrio, oldMicrio) => {
   showIntroTimer.cancel();
 });
 
-// function onMarkerClick(marker: Micrio["Marker"]) {
-//   if (!micrio.value?.marker?.id) return;
-//   if (micrio.value.marker.id === marker.id) {
-//     micrio.value.tour!.cancel();
-//   }
-// }
-
 watch(cameraPreset, (preset) => {
   if (preset === "intro") {
     micrio.value?.camera.flyToCoo([0.06, 0.5]);
