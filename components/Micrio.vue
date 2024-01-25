@@ -1,121 +1,88 @@
 <script setup lang="ts">
-import { HTMLMicrioElement, Models } from "Micrio";
-
-export type Micrio = {
-  Instance: ReturnType<typeof buildEmittedInstance>;
-  Marker: Models.ImageCultureData.Marker;
-};
+import type { Coords, HTMLMicrioElement, Models } from "Micrio";
 
 const props = defineProps<{
   id: string;
+  cancelTourAfterMs?: number;
+  coordinates?: Coords;
   lang: string;
 }>();
+const emit = defineEmits(["marker-open", "tour-stop", "tour-started"]);
 
-const emit = defineEmits<{
-  show: [micrio: Micrio["Instance"]];
-  update: [micrio: Micrio["Instance"]];
-  "marker-open": [void];
-}>();
+const tourCancellationTimer = useTimer(props.cancelTourAfterMs ?? 0, () => {
+  if (props.cancelTourAfterMs === undefined) return;
+  if (micrioRef.value?.state.$tour) {
+    console.log("Cancelling tour due to inactivity");
+    cancelTour();
+  }
+});
 
 useHead({
   title: "Micrio",
   script: [{ src: "https://b.micr.io/micrio-4.3.min.js" }],
 });
 
-const slots = defineSlots<{
-  marker(props: (typeof markers)["value"][number]): any;
-  controls(props: {
-    cancelTour: () => void;
-    nextMarker: () => void;
-    previousMarker: () => void;
-  }): any;
-}>();
-
-const micrioRef = shallowRef<HTMLMicrioElement>();
-const dataRef = shallowRef<HTMLMicrioElement["$current"]["$data"]>();
-
-function buildEmittedInstance(micrio: HTMLMicrioElement) {
-  const tour = (() => {
-    if (!micrio.state.$tour) return undefined;
-
-    // Specify currentStep explicitly, because Micrio is not showing it for some reason
-    const currentStep =
-      "currentStep" in micrio.state.$tour
-        ? micrio.state.$tour.currentStep
-        : undefined;
-
-    return {
-      ...micrio.state.$tour,
-      currentStep,
-      cancel: cancelTour,
-      controls: {
-        cancel: cancelTour,
-        next: () => changeStepBy(1),
-        previous: () => changeStepBy(-1),
-      },
-    };
-  })();
-
-  return {
-    camera: micrio.camera,
-    tour,
-    events: {
-      isNavigating: micrio.events.isNavigating,
-    },
-    marker: micrio.state?.$marker,
-    $current: micrio.$current,
-  };
-}
-
-const markers = computed(() => {
-  const markers = dataRef.value?.markers ?? [];
-  const tours = dataRef.value?.markerTours ?? [];
-
-  return markers.map((marker) => ({
-    ...marker,
-    open: () => {
-      micrioRef.value?.$current.state.marker.set(marker);
-    },
-    close: () => micrioRef.value?.$current.state.marker.set(undefined as any),
-    index: tours
-      .find((tour) => tour.steps.includes(marker.id))
-      ?.steps.indexOf(marker.id),
-  }));
-});
+const micrioRef = ref<HTMLMicrioElement>();
 
 onMounted(() => {
+  const element = document.querySelector("micr-io")!;
+  micrioRef.value = document.querySelector("micr-io") as HTMLMicrioElement;
   const micrio = micrioRef.value;
-  if (!micrio) return;
 
   micrio.defaultSettings = {
+    noZoom: true,
+    hookDrag: false,
+    hookPinch: false,
+    freeMove: false,
     _markers: {
       noTitles: true,
       autoStartTour: true,
-      zoomOutAfterClose: false,
+      zoomOutAfterClose: true,
     },
   };
 
-  micrio.addEventListener("show", () => {
-    emit("show", buildEmittedInstance(micrio));
+  element.addEventListener("show", (e: any) => {
+    if (props.coordinates) {
+      // Ignore if there's a marker selected
+      if (micrio.state.$marker) return;
 
-    micrio.$current.data.subscribe((data) => {
-      dataRef.value = data;
+      micrio.camera.flyToCoo(props.coordinates);
+    }
+
+    micrio.state.tour.subscribe((tour) => {
+      if (tour) {
+        emit("tour-started");
+        tourCancellationTimer.reset();
+        return;
+      }
+
+      emit("tour-stop");
+      tourCancellationTimer.cancel();
+    });
+
+    micrio.state.marker.subscribe((marker) => {
+      if (marker) {
+        tourCancellationTimer.reset();
+        emit("marker-open");
+      }
     });
   });
-
-  // This emit is needed for the currentStep to update in time
-  micrio.addEventListener("marker-opened", () => {
-    emit("update", buildEmittedInstance(micrio));
-  });
-
-  micrio.addEventListener("marker-open", () => {
-    emit("marker-open");
-  });
-
-  micrio.addEventListener("update", () => {
-    emit("update", buildEmittedInstance(micrio));
-  });
 });
+
+watch(
+  () => props.coordinates,
+  (coordinates) => {
+    const micrio = micrioRef.value;
+    if (!micrio) return;
+
+    // Ignore if there's a marker selected
+    if (micrio.state.$marker) return;
+
+    coordinates
+      ? micrio.camera.flyToCoo(coordinates)
+      : micrio.camera.flyToFullView();
+  }
+);
 
 watch(
   () => props.lang,
@@ -128,11 +95,17 @@ watch(
 
     // Restore view
     micrio.camera.jumpToView(oldView, 0);
-  },
+  }
 );
 
 function cancelTour() {
-  micrioRef.value?.state.tour.set(undefined);
+  const micrio = micrioRef.value!;
+
+  micrio.state.tour.set(undefined);
+
+  props.coordinates
+    ? micrio.camera.flyToCoo(props.coordinates)
+    : micrio.camera.flyToFullView();
 }
 
 function changeStepBy(delta: number) {
@@ -155,7 +128,6 @@ function changeStepBy(delta: number) {
 <template>
   <!-- https://kb.micr.io/for-developers/custom-options-for-the-micr-io-element -->
   <micr-io
-    ref="micrioRef"
     :id="id"
     :lang="lang"
     camspeed="3"
@@ -163,8 +135,11 @@ function changeStepBy(delta: number) {
     logo="false"
     toolbar="false"
     minimap="false"
+    class="touch-events-none"
   />
-  <Teleport v-for="marker in markers" :to="`#m-${marker.id} > button`">
-    <slot name="marker" v-bind="marker"></slot>
-  </Teleport>
+  <slot
+    :cancelTour="cancelTour"
+    :nextMarker="() => changeStepBy(1)"
+    :previousMarker="() => changeStepBy(-1)"
+  ></slot>
 </template>

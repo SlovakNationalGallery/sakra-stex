@@ -33,12 +33,3 @@
   font-style: normal;
   font-display: swap;
 }
-
-/* Circular Regular */
-@font-face {
-  font-family: "Circular";
-  src: url("/fonts/Circular/lineto-circular-pro-book.ttf") format("ttf");
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}

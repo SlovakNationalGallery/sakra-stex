@@ -1,5 +1,6 @@
 @import "micrio.css";
-@import "fonts.css";
+@import "sng-font.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
