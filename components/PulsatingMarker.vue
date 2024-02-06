@@ -9,19 +9,21 @@ const pulseTimeline = gsap.timeline();
 onMounted(() => {
   pulseTimeline
     .to(marker.value, {
-      height: "3.5rem",
-      width: "3.5rem",
+      height: "3rem",
+      width: "3rem",
       backgroundColor: "black",
       color: "white",
-      opacity: 1,
+      opacity: 0.7,
       ease: "power1.out",
+      delay: 0.3,
       duration: 0.3,
     })
     .to(marker.value, {
-      height: "2rem",
-      width: "2rem",
+      height: "2.5rem",
+      width: "2.5rem",
       backgroundColor: "black",
       color: "white",
+      delay: 1,
       opacity: 0.2,
       duration: 1,
     })

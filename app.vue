@@ -69,10 +69,6 @@ watch(cameraPreset, (preset) => {
   }
 });
 
-const showLangSwitch = computed(() => {
-  return cameraPreset.value === "intro" || cameraPreset.value === "zoom-out";
-});
-
 // Micrio only emits tour-started when the camera has settled
 // so we use marker-open as a proxy event
 function onMarkerOpen() {
@@ -122,13 +118,13 @@ function onMicrioError() {
         >
           <div
             v-if="micrio?.tour && micrio?.marker"
-            class="pointer-events-none absolute inset-0 flex p-16"
+            class="pointer-events-none absolute inset-0 flex p-10"
             :class="
               (() => {
                 if (micrio.marker.class?.includes('top-left'))
                   return 'items-start justify-start';
                 if (micrio.marker.class?.includes('top-right'))
-                  return 'items-start justify-end';
+                  return 'items-start justify-end top-32';
                 if (micrio.marker.class?.includes('bottom-right'))
                   return 'items-end justify-end';
                 if (micrio.marker.class?.includes('bottom-left'))
@@ -209,12 +205,12 @@ function onMicrioError() {
       leave-to-class="opacity-0 translate-y-12"
       leave-active-class="transition-all duration-300"
     >
-      <div v-if="showLangSwitch" class="absolute right-0 top-0">
+      <div class="absolute right-10 top-10">
         <button
-          class="p-12 font-display text-3xl uppercase text-white"
+          class="h-16 w-16 border-2 border-black bg-white align-middle font-display text-2xl font-bold uppercase text-black rounded-xl flex items-center justify-center"
           @click="lang = lang === 'sk' ? 'en' : 'sk'"
         >
-          {{ lang }}
+          <span class="leading-0 pt-1">{{ lang }}</span>
         </button>
       </div>
     </Transition>
