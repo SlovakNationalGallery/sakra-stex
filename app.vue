@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { Micrio } from "./components/Micrio.vue";
+
 useHead({
   // Do not index for now
   meta: [{ name: "robots", content: "noindex" }],
@@ -15,14 +17,19 @@ const strings = {
   },
 };
 
-const tourRunning = ref(false);
-const showIntro = ref(true);
-const showLangSwitch = ref(true);
+const cameraPreset = ref<"intro" | "zoom-out" | null>(null);
+const micrio = ref<Micrio["Instance"]>();
 
 const lang = ref<"en" | "sk">("sk");
-// Show intro after timeout if no marker is selected
+
+const inactivityTimer = useTimer(60000, () => {
+  micrio.value?.tour?.cancel();
+  cameraPreset.value = "zoom-out";
+  showIntroTimer.reset();
+});
+// // Show intro after timeout if no marker is selected
 const showIntroTimer = useTimer(5000, () => {
-  showIntro.value = true;
+  cameraPreset.value = "intro";
 });
 
 onMounted(() => {
@@ -30,25 +37,46 @@ onMounted(() => {
   document.addEventListener("contextmenu", (e) => e.preventDefault());
 });
 
-watch(tourRunning, (tourRunning) => {
-  if (tourRunning) {
-    showIntro.value = false;
-    showIntroTimer.cancel();
+watch(micrio, (micrio, oldMicrio) => {
+  if (!micrio) return;
+
+  // Initialization
+  if (!oldMicrio && micrio) {
+    cameraPreset.value = "intro";
+  }
+
+  // Reset camera on navigation
+  if (micrio.events.isNavigating) {
+    micrio.tour?.cancel();
     return;
   }
 
-  if (!tourRunning) {
-    showIntroTimer.reset();
-    showLangSwitch.value = true;
-    return;
+  if (micrio.tour) {
+    cameraPreset.value = null;
   }
+
+  inactivityTimer.reset();
+  showIntroTimer.cancel();
+});
+
+watch(cameraPreset, (preset) => {
+  if (preset === "intro") {
+    micrio.value?.camera.flyToCoo([0.06, 0.5]);
+  }
+
+  if (preset === "zoom-out") {
+    micrio.value?.camera.flyToFullView();
+  }
+});
+
+const showLangSwitch = computed(() => {
+  return cameraPreset.value === "intro" || cameraPreset.value === "zoom-out";
 });
 
 // Micrio only emits tour-started when the camera has settled
 // so we use marker-open as a proxy event
 function onMarkerOpen() {
-  showIntro.value = false;
-  showLangSwitch.value = false;
+  cameraPreset.value = null;
 }
 
 function onMicrioError() {
@@ -57,59 +85,79 @@ function onMicrioError() {
 </script>
 
 <template>
-  <div class="bg-black absolute inset-0 overflow-hidden font-body select-none">
+  <div class="absolute inset-0 select-none overflow-hidden bg-black font-body">
     <div class="h-full w-full">
       <ClientOnly>
         <NuxtErrorBoundary @error="onMicrioError">
           <Micrio
             id="aYdqm"
-            :cancel-tour-after-ms="60000"
             :lang="lang"
-            :coordinates="showIntro ? [0.06, 0.5] : undefined"
-            v-slot="micrio"
+            @show="micrio = $event"
+            @update="micrio = $event"
             @marker-open="onMarkerOpen"
-            @tour-started="tourRunning = true"
-            @tour-stop="tourRunning = false"
           >
-            <!-- Controls -->
-            <div
-              class="absolute inset-x-0 bottom-0 flex justify-end p-16 pointer-events-none overflow-hidden"
-            >
-              <Transition
-                enter-from-class="opacity-0"
-                enter-to-class="opacity-100"
-                enter-active-class="transition-all duration-200 ease-out"
-                leave-from-class="opacity-100"
-                leave-to-class="opacity-0"
-                leave-active-class="transition-all duration-100 ease-in"
+            <template #marker="marker">
+              <PulsatingMarker
+                class="visible absolute -left-1/2 -top-1/2 flex h-16 w-16 items-center justify-center"
+                @click.stop="
+                  micrio?.marker?.id === marker.id
+                    ? marker.close()
+                    : marker.open()
+                "
+                :open="micrio?.marker?.id === marker.id"
               >
-                <div
-                  v-if="tourRunning"
-                  class="p-4 bg-white grid grid-cols-3 rounded-[5rem] gap-4 pointer-events-auto drop-shadow-lg shadow-black/70"
-                >
-                  <button
-                    class="w-14 h-14 bg-black/5 active:bg-black/10 flex items-center justify-center rounded-full"
-                    @click="micrio.cancelTour"
-                  >
-                    <img src="~/assets/img/x-mark.svg" />
-                  </button>
-                  <button
-                    class="w-14 h-14 bg-black/5 active:bg-black/10 flex items-center justify-center rounded-full"
-                    @click="micrio.previousMarker"
-                  >
-                    <img src="~/assets/img/arrow-left.svg" />
-                  </button>
-                  <button
-                    class="w-14 h-14 bg-black/5 active:bg-black/10 flex items-center justify-center rounded-full"
-                    @click="micrio.nextMarker"
-                  >
-                    <img src="~/assets/img/arrow-left.svg" class="rotate-180" />
-                  </button>
-                </div>
-              </Transition>
-            </div>
+                {{ (marker.index ?? 0) + 1 }}
+              </PulsatingMarker>
+            </template>
           </Micrio>
         </NuxtErrorBoundary>
+        <!-- Custom marker -->
+        <Transition
+          enter-from-class="opacity-0"
+          enter-to-class="opacity-100"
+          enter-active-class="transition-all duration-200 ease-out"
+          leave-from-class="opacity-100"
+          leave-to-class="opacity-0"
+          leave-active-class="transition-all duration-100 ease-in"
+        >
+          <div
+            v-if="micrio?.tour && micrio?.marker"
+            class="pointer-events-none absolute inset-0 flex p-16"
+            :class="
+              (() => {
+                if (micrio.marker.class?.includes('top-left'))
+                  return 'items-start justify-start';
+                if (micrio.marker.class?.includes('top-right'))
+                  return 'items-start justify-end';
+                if (micrio.marker.class?.includes('bottom-right'))
+                  return 'items-end justify-end';
+                if (micrio.marker.class?.includes('bottom-left'))
+                  return 'items-end justify-start';
+
+                // default: bottom-right
+                return 'items-end justify-end';
+              })()
+            "
+          >
+            <div class="max-w-lg rounded-xl border-2 border-black bg-white p-6">
+              <div
+                class="pointer-events-auto flex items-center justify-between gap-4 pb-5 pt-2"
+              >
+                <button @click="micrio.tour.controls.previous">
+                  <img src="~/assets/img/arrow-left.svg" />
+                </button>
+                <div class="font-display text-2xl font-bold">
+                  <span>{{ (micrio.tour.currentStep ?? 0) + 1 }}. </span>
+                  <span>{{ micrio.marker.title }}</span>
+                </div>
+                <button @click="micrio.tour.controls.next">
+                  <img src="~/assets/img/arrow-left.svg" class="rotate-180" />
+                </button>
+              </div>
+              <div v-html="micrio.marker.body" class="text-xl" />
+            </div>
+          </div>
+        </Transition>
       </ClientOnly>
     </div>
 
@@ -124,7 +172,7 @@ function onMicrioError() {
       leave-active-class="transition-all duration-500"
     >
       <div
-        v-if="showIntro"
+        v-if="cameraPreset === 'intro'"
         class="absolute bottom-32 left-32 whitespace-nowrap"
       >
         <Transition
@@ -139,11 +187,11 @@ function onMicrioError() {
         >
           <div :key="lang">
             <h1
-              class="text-white font-bold text-[4.5rem] drop-shadow-lg font-display"
+              class="font-display text-[4.5rem] font-bold text-white drop-shadow-lg"
             >
               {{ strings[lang].title }}
             </h1>
-            <p class="text-white text-2xl drop-shadow-sm">
+            <p class="text-2xl text-white drop-shadow-sm">
               {{ strings[lang].tagline }}
             </p>
           </div>
@@ -161,9 +209,9 @@ function onMicrioError() {
       leave-to-class="opacity-0 translate-y-12"
       leave-active-class="transition-all duration-300"
     >
-      <div v-if="showLangSwitch" class="absolute top-0 right-0">
+      <div v-if="showLangSwitch" class="absolute right-0 top-0">
         <button
-          class="text-white font-display text-3xl uppercase p-12"
+          class="p-12 font-display text-3xl uppercase text-white"
           @click="lang = lang === 'sk' ? 'en' : 'sk'"
         >
           {{ lang }}
