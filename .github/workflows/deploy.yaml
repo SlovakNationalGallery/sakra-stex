@@ -1,7 +1,7 @@
 name: Deploy
 on:
   push:
-    branches: [alternative-design]
+    branches: [main]
 
 jobs:
   build:
