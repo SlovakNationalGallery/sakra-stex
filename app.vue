@@ -51,6 +51,7 @@ function onMarkerOpen() {
   showLangSwitch.value = false;
 }
 
+
 function onMicrioError() {
   window.location.reload();
 }
