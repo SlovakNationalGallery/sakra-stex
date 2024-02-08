@@ -59,13 +59,13 @@ watch(micrio, (micrio, oldMicrio) => {
   showIntroTimer.cancel();
 });
 
-watch(cameraPreset, (preset) => {
+watch(cameraPreset, async (preset) => {
   if (preset === "intro") {
-    micrio.value?.camera.flyToCoo([0.06, 0.5]);
+    await micrio.value?.camera.flyToCoo([0.06, 0.5]);
   }
 
   if (preset === "zoom-out") {
-    micrio.value?.camera.flyToFullView();
+    await micrio.value?.camera.flyToFullView();
   }
 });
 
@@ -77,6 +77,13 @@ function onMarkerOpen() {
 
 function onMicrioError() {
   window.location.reload();
+}
+
+async function switchLanguage() {
+  micrio.value?.tour?.cancel();
+  await micrio.value?.camera.flyToFullView();
+  lang.value = lang.value === "sk" ? "en" : "sk";
+  cameraPreset.value = "intro";
 }
 </script>
 
@@ -124,7 +131,7 @@ function onMicrioError() {
                 if (micrio.marker.class?.includes('top-left'))
                   return 'items-start justify-start';
                 if (micrio.marker.class?.includes('top-right'))
-                  return 'items-start justify-end top-32';
+                  return 'top-32 items-start justify-end';
                 if (micrio.marker.class?.includes('bottom-right'))
                   return 'items-end justify-end';
                 if (micrio.marker.class?.includes('bottom-left'))
@@ -207,8 +214,8 @@ function onMicrioError() {
     >
       <div class="absolute right-10 top-10">
         <button
-          class="h-16 w-16 border-2 border-black bg-white align-middle font-display text-2xl font-bold uppercase text-black rounded-xl flex items-center justify-center"
-          @click="lang = lang === 'sk' ? 'en' : 'sk'"
+          class="flex h-16 w-16 items-center justify-center rounded-xl border-2 border-black bg-white align-middle font-display text-2xl font-bold uppercase text-black"
+          @click="switchLanguage"
         >
           <span class="leading-0 pt-1">{{ lang }}</span>
         </button>

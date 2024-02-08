@@ -15,7 +15,7 @@ module.exports = {
     extend: {},
     fontFamily: {
       display: ["SNG Sans", ...defaultTheme.fontFamily.sans],
-      body: ["Inter", ...defaultTheme.fontFamily.sans],
+      body: ["Circular", ...defaultTheme.fontFamily.sans],
     },
   },
   plugins: [require("@tailwindcss/typography")],

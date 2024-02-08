@@ -37,7 +37,7 @@
 /* Circular Regular */
 @font-face {
   font-family: "Circular";
-  src: url("/fonts/Circular/lineto-circular-pro-book.ttf") format("ttf");
+  src: url("/fonts/Circular/circular-book.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;

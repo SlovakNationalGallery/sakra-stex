@@ -19,12 +19,12 @@ onMounted(() => {
       duration: 0.3,
     })
     .to(marker.value, {
-      height: "2.5rem",
-      width: "2.5rem",
+      height: "2rem",
+      width: "2rem",
       backgroundColor: "black",
       color: "white",
       delay: 1,
-      opacity: 0.2,
+      opacity: 0,
       duration: 1,
     })
     .repeat(-1);
