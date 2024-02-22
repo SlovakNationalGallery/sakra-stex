@@ -128,6 +128,9 @@ watch(
 
     // Restore view
     micrio.camera.jumpToView(oldView, 0);
+
+    // Cancel any ongoing tours
+    cancelTour();
   },
 );
 

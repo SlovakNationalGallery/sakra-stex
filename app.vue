@@ -22,13 +22,17 @@ const micrio = ref<Micrio["Instance"]>();
 
 const lang = ref<"en" | "sk">("sk");
 
-const inactivityTimer = useTimer(60000, () => {
+const _1_minute = 60000;
+const _5_seconds = 5000;
+
+const inactivityTimer = useTimer(_1_minute, () => {
   micrio.value?.tour?.cancel();
   cameraPreset.value = "zoom-out";
   showIntroTimer.reset();
 });
 // // Show intro after timeout if no marker is selected
-const showIntroTimer = useTimer(5000, () => {
+const showIntroTimer = useTimer(_5_seconds, () => {
+  lang.value = "sk";
   cameraPreset.value = "intro";
 });
 
@@ -61,16 +65,19 @@ watch(micrio, (micrio, oldMicrio) => {
 
 watch(cameraPreset, (preset) => {
   if (preset === "intro") {
-    micrio.value?.camera.flyToCoo([0.06, 0.5]);
+    nextTick(async () => {
+      await micrio.value?.camera.flyToFullView();
+      micrio.value?.camera.flyToCoo([0.06, 0.5]);
+    });
   }
 
   if (preset === "zoom-out") {
-    micrio.value?.camera.flyToFullView();
+    nextTick(() => micrio.value?.camera.flyToFullView());
   }
 });
 
-const showLangSwitch = computed(() => {
-  return cameraPreset.value === "intro" || cameraPreset.value === "zoom-out";
+watch(lang, () => {
+  cameraPreset.value = "intro";
 });
 
 // Micrio only emits tour-started when the camera has settled
@@ -122,13 +129,13 @@ function onMicrioError() {
         >
           <div
             v-if="micrio?.tour && micrio?.marker"
-            class="pointer-events-none absolute inset-0 flex p-16"
+            class="pointer-events-none absolute inset-0 flex p-10"
             :class="
               (() => {
                 if (micrio.marker.class?.includes('top-left'))
                   return 'items-start justify-start';
                 if (micrio.marker.class?.includes('top-right'))
-                  return 'items-start justify-end';
+                  return 'mr-[6.5rem] items-start justify-end'; // Account for the language switcher
                 if (micrio.marker.class?.includes('bottom-right'))
                   return 'items-end justify-end';
                 if (micrio.marker.class?.includes('bottom-left'))
@@ -200,23 +207,14 @@ function onMicrioError() {
     </Transition>
 
     <!-- Lang switcher -->
-    <Transition
-      appear
-      enter-from-class="opacity-0 translate-y-12"
-      enter-to-class="opacity-100"
-      enter-active-class="transition-all duration-300 delay-200 ease-out"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0 translate-y-12"
-      leave-active-class="transition-all duration-300"
-    >
-      <div v-if="showLangSwitch" class="absolute right-0 top-0">
-        <button
-          class="p-12 font-display text-3xl uppercase text-white"
-          @click="lang = lang === 'sk' ? 'en' : 'sk'"
+    <div class="absolute right-0 top-0">
+      <button class="p-10" @click="lang = lang === 'sk' ? 'en' : 'sk'">
+        <div
+          class="flex h-16 w-16 items-center justify-center rounded-xl border-2 border-black bg-white font-display text-2xl font-medium uppercase"
         >
-          {{ lang }}
-        </button>
-      </div>
-    </Transition>
+          <span :key="lang">{{ lang }}</span>
+        </div>
+      </button>
+    </div>
   </div>
 </template>
