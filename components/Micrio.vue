@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Coords, HTMLMicrioElement, Models } from "Micrio";
 
+const gtm = useGtm();
+
 const props = defineProps<{
   id: string;
   cancelTourAfterMs?: number;
@@ -65,6 +67,15 @@ onMounted(() => {
         tourCancellationTimer.reset();
         emit("marker-open");
       }
+    });
+  });
+
+  element.addEventListener("marker-open", (e: any) => {
+    gtm?.trackEvent({
+      category: "Micrio",
+      action: e.type,
+      value: e.detail.title,
+      label: [props.id, e.detail.title].join(" "),
     });
   });
 });
